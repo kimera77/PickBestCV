@@ -4,6 +4,7 @@
 import { analyzeSingleCv } from "@/ai/flows/analyze-single-cv";
 import { z } from "zod";
 import type { CandidateMatch } from "./types";
+import {fromBuffer} from "pdf2pic";
 
 const CvFileSchema = z
   .instanceof(File)
@@ -18,6 +19,7 @@ const FormSchema = z.object({
     .string()
     .min(1, "La descripción del trabajo es obligatoria."),
   cvs: z.array(CvFileSchema).min(1, "Se requiere al menos un CV."),
+  language: z.string().optional(),
 });
 
 export type FormState = {
@@ -38,6 +40,7 @@ async function fileToDataURI(file: File): Promise<string> {
   return `data:${file.type};base64,${base64}`;
 }
 
+
 export async function performCvAnalysis(
   prevState: FormState,
   formData: FormData
@@ -46,6 +49,7 @@ export async function performCvAnalysis(
   const validatedFields = FormSchema.safeParse({
     jobDescription: formData.get("jobDescription"),
     cvs: cvFiles,
+    language: formData.get("language"),
   });
 
   if (!validatedFields.success) {
@@ -56,16 +60,17 @@ export async function performCvAnalysis(
     };
   }
 
-  const { jobDescription, cvs } = validatedFields.data;
+  const { jobDescription, cvs, language } = validatedFields.data;
 
   try {
     const analysisPromises = cvs.map(async (file) => {
-      const cvDataUri = await fileToDataURI(file);
-      const result = await analyzeSingleCv({
-        jobDescription,
-        cv: cvDataUri,
-      });
-      return { ...result, cv: file.name };
+        const cvDataUri = await fileToDataURI(file);
+        const result = await analyzeSingleCv({
+          jobDescription,
+          cv: cvDataUri,
+          language: language,
+        });
+        return { ...result, cv: file.name };
     });
 
     const results = await Promise.all(analysisPromises);

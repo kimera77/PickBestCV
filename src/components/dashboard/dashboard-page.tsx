@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { JobTemplate } from "@/lib/types";
 import JobTemplates from "./job-templates";
 import CvAnalysis from "./cv-analysis";
+import { LanguageProvider } from "./language-provider";
 
 const initialTemplates: JobTemplate[] = [
   {
@@ -33,16 +34,18 @@ export default function DashboardPageClient() {
   };
   
   return (
-    <div className="grid flex-1 items-start gap-4 lg:grid-cols-3 xl:grid-cols-3">
-        <JobTemplates 
-            templates={templates}
-            selectedTemplate={selectedTemplate}
-            setSelectedTemplate={setSelectedTemplate}
-            onCreateTemplate={handleCreateTemplate}
-        />
-        <div className="lg:col-span-2 xl:col-span-2">
-            <CvAnalysis selectedTemplate={selectedTemplate} />
+    <LanguageProvider>
+        <div className="grid flex-1 items-start gap-4 lg:grid-cols-3 xl:grid-cols-3">
+            <JobTemplates 
+                templates={templates}
+                selectedTemplate={selectedTemplate}
+                setSelectedTemplate={setSelectedTemplate}
+                onCreateTemplate={handleCreateTemplate}
+            />
+            <div className="lg:col-span-2 xl:col-span-2">
+                <CvAnalysis selectedTemplate={selectedTemplate} />
+            </div>
         </div>
-    </div>
+    </LanguageProvider>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useContext } from "react";
 import type { JobTemplate } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { performCvAnalysis, type FormState } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import CvUpload from "./cv-upload";
 import AnalysisResults from "./analysis-results";
+import { LanguageContext } from "@/components/dashboard/language-provider";
 
 type CvAnalysisProps = {
   selectedTemplate: JobTemplate | null;
@@ -44,6 +45,7 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
   const [formState, formAction] = useActionState(performCvAnalysis, initialState);
   const { toast } = useToast();
   const [files, setFiles] = useState<File[]>([]);
+  const { language } = useContext(LanguageContext);
 
   useEffect(() => {
     if (formState.message && formState.errors) {
@@ -71,6 +73,7 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
     <div className="space-y-6">
         <form action={formAction} className="space-y-6">
             <input type="hidden" name="jobDescription" value={selectedTemplate.description} />
+            <input type="hidden" name="language" value={language.code} />
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -78,7 +81,7 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
                         Subir CVs
                     </CardTitle>
                     <CardDescription>
-                        Sube los CVs (PDF o Word) que quieras analizar para el puesto de &quot;{selectedTemplate.title}&quot;.
+                        Sube los CVs (solo PDF) que quieras analizar para el puesto de &quot;{selectedTemplate.title}&quot;.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

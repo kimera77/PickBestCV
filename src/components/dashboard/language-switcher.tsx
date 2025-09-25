@@ -1,51 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useContext } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const languages = [
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-];
+import { Check, Languages } from "lucide-react";
+import { LanguageContext, languages } from "./language-provider";
 
 export default function LanguageSwitcher() {
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const { language, setLanguage } = useContext(LanguageContext);
 
-  // In a real app, you would use a library like next-international
-  // or i18next to handle translations and routing.
   const handleLanguageChange = (langCode: string) => {
     const lang = languages.find(l => l.code === langCode);
     if(lang) {
-        setSelectedLanguage(lang);
-        // Here you would typically change the locale of the app
-        console.log(`Language changed to ${lang.name}`);
+        setLanguage(lang);
     }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <span className="text-2xl">{selectedLanguage.flag}</span>
-          <span className="sr-only">Change language</span>
+        <Button variant="outline" className="flex items-center gap-2 font-semibold">
+           <Languages className="h-4 w-4 text-muted-foreground" />
+          <span>{language.code.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {languages.map((lang) => (
-          <DropdownMenuItem
-            key={lang.code}
-            onSelect={() => handleLanguageChange(lang.code)}
-          >
-            <span className="text-xl mr-2">{lang.flag}</span>
-            {lang.name}
-          </DropdownMenuItem>
-        ))}
+      <DropdownMenuContent align="end" className="w-[180px]">
+        <DropdownMenuRadioGroup value={language.code} onValueChange={handleLanguageChange}>
+            {languages.map((lang) => (
+            <DropdownMenuRadioItem
+                key={lang.code}
+                value={lang.code}
+                className="flex items-center justify-between"
+            >
+                <span>{lang.name}</span>
+                {language.code === lang.code && <Check className="h-4 w-4" />}
+            </DropdownMenuRadioItem>
+            ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

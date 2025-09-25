@@ -19,6 +19,7 @@ const AnalyzeSingleCvInputSchema = z.object({
     .describe(
       "A single CV as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  language: z.string().optional().describe('The language for the response (e.g., "es", "en"). Defaults to "es".'),
 });
 
 export type AnalyzeSingleCvInput = z.infer<
@@ -51,6 +52,8 @@ const analyzeSingleCvPrompt = ai.definePrompt({
   output: {schema: AnalyzeSingleCvOutputSchema},
   prompt: `You are an expert recruiter. You will analyze a single CV against a job description.
 
+The response MUST be in the specified language: {{{language}}}.
+
 Job Description: {{{jobDescription}}}
 
 CV:
@@ -67,7 +70,9 @@ const analyzeSingleCvFlow = ai.defineFlow(
     outputSchema: AnalyzeSingleCvOutputSchema,
   },
   async input => {
-    const {output} = await analyzeSingleCvPrompt(input);
+    // Default to Spanish if no language is provided
+    const languageToUse = input.language || 'es';
+    const {output} = await analyzeSingleCvPrompt({...input, language: languageToUse});
     return output!;
   }
 );
