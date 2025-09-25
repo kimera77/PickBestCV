@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
+import { useActionState } from "react";
 import type { JobTemplate } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ function SubmitButton() {
 }
 
 export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
-  const [formState, formAction] = useFormState(performCvAnalysis, initialState);
+  const [formState, formAction] = useActionState(performCvAnalysis, initialState);
   const { toast } = useToast();
   const [files, setFiles] = useState<File[]>([]);
 
