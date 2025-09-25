@@ -27,12 +27,13 @@ export type AnalyzeCVsAgainstJobDescriptionInput = z.infer<
 
 const CandidateMatchSchema = z.object({
   cv: z.string().describe('The CV data URI.'),
+  candidateName: z.string().describe("The full name of the candidate as extracted from the CV."),
   matchScore: z.number().describe('The percentage match score (0-100).'),
   reasoning: z.string().describe('Explanation of how the match score was determined.'),
 });
 
 const AnalyzeCVsAgainstJobDescriptionOutputSchema = z.object({
-  candidateMatches: z.array(CandidateMatchSchema).describe('A ranked list of candidates with their CVs and match scores.'),
+  candidateMatches: z.array(CandidateMatchSchema).describe('A ranked list of candidates with their CVs, names, and match scores.'),
 });
 
 export type AnalyzeCVsAgainstJobDescriptionOutput = z.infer<
@@ -58,7 +59,7 @@ CVs:
 - {{media url=this}}
 {{/each}}
 
-For each CV, you will provide a match score (0-100) and a brief explanation of how you determined the score. Return the results in JSON format.
+For each CV, you will extract the candidate's full name, provide a match score (0-100), and a brief explanation of how you determined the score. Return the results in JSON format.
 `,
 });
 

@@ -25,6 +25,7 @@ const getBadgeVariant = (score: number): 'destructive' | 'secondary' | 'default'
 };
 
 const getInitials = (name: string) => {
+    if (!name) return '??';
     const parts = name.split(/[\s._-]+/);
     if (parts.length > 1) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -39,11 +40,11 @@ const ResultCard = ({ match }: { match: CandidateMatch }) => (
                 <AccordionItem value="item-1" className="border-b-0">
                     <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12 border">
-                            <AvatarFallback>{getInitials(match.cv)}</AvatarFallback>
+                            <AvatarFallback>{getInitials(match.candidateName)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-1">
-                            <p className="text-sm font-medium leading-none truncate">{match.cv}</p>
-                            <p className="text-sm text-muted-foreground">Puntuación de coincidencia: {match.matchScore}%</p>
+                            <p className="text-sm font-medium leading-none truncate">{match.candidateName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{match.cv}</p>
                             <Progress value={match.matchScore} className="h-2" />
                         </div>
                         <Badge variant={getBadgeVariant(match.matchScore)} className="hidden sm:inline-flex">

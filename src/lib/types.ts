@@ -6,6 +6,7 @@ export type JobTemplate = {
 
 export type CandidateMatch = {
   cv: string;
+  candidateName: string;
   matchScore: number;
   reasoning: string;
 };
