@@ -10,11 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
+import { PlusCircle } from "lucide-react";
 
 type JobTemplateFormProps = {
   children: React.ReactNode;
@@ -38,7 +40,7 @@ export default function JobTemplateForm({ children, onSave }: JobTemplateFormPro
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Crear plantilla de trabajo</DialogTitle>
           <DialogDescription>
@@ -72,7 +74,11 @@ export default function JobTemplateForm({ children, onSave }: JobTemplateFormPro
           </div>
         </div>
         <DialogFooter>
+            <DialogClose asChild>
+                <Button variant="outline">Cancelar</Button>
+            </DialogClose>
           <Button type="submit" onClick={handleSave} disabled={!title || !description}>
+            <PlusCircle className="mr-2 h-4 w-4" />
             Guardar plantilla
           </Button>
         </DialogFooter>

@@ -9,19 +9,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileScan } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-sm shadow-xl">
       <CardHeader>
-        <div className="flex items-center justify-center gap-2 mb-4">
-            <FileScan className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl">CVMatch</CardTitle>
+        <div className="flex flex-col items-center justify-center text-center gap-2 mb-4">
+            <BrainCircuit className="h-10 w-10 text-primary" />
+            <CardTitle className="text-3xl font-bold">CVMatch</CardTitle>
+            <CardDescription className="text-balance">
+              Introduce tu correo electrónico para acceder a tu cuenta
+            </CardDescription>
         </div>
-        <CardDescription>
-          Introduce tu correo electrónico para acceder a tu cuenta
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
@@ -39,20 +39,20 @@ export default function LoginPage() {
               <Label htmlFor="password">Contraseña</Label>
               <Link
                 href="#"
-                className="ml-auto inline-block text-sm underline"
+                className="ml-auto inline-block text-sm text-primary hover:underline"
               >
                 ¿Has olvidado tu contraseña?
               </Link>
             </div>
             <Input id="password" type="password" required />
           </div>
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full font-semibold">
             Iniciar sesión
           </Button>
         </div>
         <div className="mt-4 text-center text-sm">
           ¿No tienes una cuenta?{" "}
-          <Link href="/signup" className="underline">
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
             Regístrate
           </Link>
         </div>

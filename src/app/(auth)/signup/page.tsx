@@ -9,20 +9,20 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileScan } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 
 
 export default function SignupPage() {
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-sm shadow-xl">
       <CardHeader>
-        <div className="flex items-center justify-center gap-2 mb-4">
-            <FileScan className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl">CVMatch</CardTitle>
+        <div className="flex flex-col items-center justify-center text-center gap-2 mb-4">
+            <BrainCircuit className="h-10 w-10 text-primary" />
+            <CardTitle className="text-3xl font-bold">CVMatch</CardTitle>
+            <CardDescription className="text-balance">
+              Introduce tus datos para crear una cuenta y empezar a analizar CVs
+            </CardDescription>
         </div>
-        <CardDescription>
-          Introduce tus datos para crear una cuenta
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
@@ -49,13 +49,13 @@ export default function SignupPage() {
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" type="password" />
           </div>
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full font-semibold">
             Crear una cuenta
           </Button>
         </div>
         <div className="mt-4 text-center text-sm">
           ¿Ya tienes una cuenta?{" "}
-          <Link href="/login" className="underline">
+          <Link href="/login" className="font-semibold text-primary hover:underline">
             Iniciar sesión
           </Link>
         </div>

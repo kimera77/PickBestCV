@@ -1,14 +1,13 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import type { JobTemplate } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, WandSparkles } from "lucide-react";
 import { performCvAnalysis, type FormState } from "@/lib/actions";
-import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import CvUpload from "./cv-upload";
 import AnalysisResults from "./analysis-results";
@@ -25,7 +24,7 @@ const initialState: FormState = {
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+        <Button type="submit" disabled={pending} size="lg" className="w-full sm:w-auto font-semibold">
             {pending ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -33,7 +32,7 @@ function SubmitButton() {
                 </>
             ) : (
                 <>
-                    <Sparkles className="mr-2 h-4 w-4" />
+                    <WandSparkles className="mr-2 h-4 w-4" />
                     Analizar CVs
                 </>
             )}
@@ -58,10 +57,11 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
 
   if (!selectedTemplate) {
     return (
-      <div className="flex h-full min-h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card">
-        <div className="text-center">
-          <p className="text-lg font-medium text-muted-foreground">Selecciona una plantilla de trabajo para empezar</p>
-          <p className="text-sm text-muted-foreground">Una vez que selecciones una plantilla, podrás subir CVs para su análisis.</p>
+      <div className="flex h-full min-h-[500px] items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card">
+        <div className="text-center p-8">
+          <WandSparkles className="mx-auto h-12 w-12 text-primary/50 mb-4" />
+          <h3 className="text-xl font-semibold text-foreground mb-2">Selecciona una plantilla de trabajo para empezar</h3>
+          <p className="text-md text-muted-foreground">Una vez que selecciones una plantilla, podrás subir CVs para su análisis.</p>
         </div>
       </div>
     );
@@ -73,7 +73,10 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
             <input type="hidden" name="jobDescription" value={selectedTemplate.description} />
             <Card>
                 <CardHeader>
-                    <CardTitle>1. Subir CVs</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <span>1.</span> 
+                        Subir CVs
+                    </CardTitle>
                     <CardDescription>
                         Sube los CVs (PDF o Word) que quieras analizar para el puesto de &quot;{selectedTemplate.title}&quot;.
                     </CardDescription>
