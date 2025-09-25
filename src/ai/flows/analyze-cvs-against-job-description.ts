@@ -15,10 +15,14 @@ import {z} from 'genkit';
 const AnalyzeCVsAgainstJobDescriptionInputSchema = z.object({
   jobDescription: z.string().describe('The job description to match CVs against.'),
   cvs: z
-    .array(z.string())
-    .describe(
-      'An array of CVs. Each CV can be a data URI for a PDF (data:<mimetype>;base64,<encoded_data>) or plain text for other document types.'
-    ),
+    .array(
+      z
+        .string()
+        .describe(
+          "A CV as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+        )
+    )
+    .describe('An array of CVs.'),
 });
 
 export type AnalyzeCVsAgainstJobDescriptionInput = z.infer<
@@ -26,13 +30,21 @@ export type AnalyzeCVsAgainstJobDescriptionInput = z.infer<
 >;
 
 const CandidateMatchSchema = z.object({
-  candidateName: z.string().describe("The full name of the candidate as extracted from the CV."),
+  candidateName: z
+    .string()
+    .describe('The full name of the candidate as extracted from the CV.'),
   matchScore: z.number().describe('The percentage match score (0-100).'),
-  reasoning: z.string().describe('Explanation of how the match score was determined.'),
+  reasoning: z
+    .string()
+    .describe('Explanation of how the match score was determined.'),
 });
 
 const AnalyzeCVsAgainstJobDescriptionOutputSchema = z.object({
-  candidateMatches: z.array(CandidateMatchSchema).describe('A ranked list of candidates with their names and match scores.'),
+  candidateMatches: z
+    .array(CandidateMatchSchema)
+    .describe(
+      'A ranked list of candidates with their names and match scores.'
+    ),
 });
 
 export type AnalyzeCVsAgainstJobDescriptionOutput = z.infer<
@@ -45,10 +57,6 @@ export async function analyzeCVsAgainstJobDescription(
   return analyzeCVsAgainstJobDescriptionFlow(input);
 }
 
-function isDataUri(str: string): boolean {
-  return str.startsWith('data:');
-}
-
 const analyzeCVsAgainstJobDescriptionPrompt = ai.definePrompt({
   name: 'analyzeCVsAgainstJobDescriptionPrompt',
   input: {schema: AnalyzeCVsAgainstJobDescriptionInputSchema},
@@ -59,12 +67,12 @@ Job Description: {{{jobDescription}}}
 
 CVs:
 {{#each cvs}}
-- {{#if (isDataUri this)}}{{media url=this}}{{else}}{{{this}}}{{/if}}
+- {{media url=this}}
 {{/each}}
 
 For each CV, you will extract the candidate's full name, provide a match score (0-100), and a brief explanation of how you determined the score. Return the results in JSON format.
 `,
-}, { isDataUri });
+});
 
 const analyzeCVsAgainstJobDescriptionFlow = ai.defineFlow(
   {

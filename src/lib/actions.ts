@@ -4,18 +4,12 @@
 import { analyzeCVsAgainstJobDescription } from "@/ai/flows/analyze-cvs-against-job-description";
 import { z } from "zod";
 import type { CandidateMatch } from "./types";
-import mammoth from "mammoth";
 
 const CvFileSchema = z
   .instanceof(File)
   .refine(
-    (file) =>
-      [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ].includes(file.type),
-    "Solo se permiten documentos PDF y Word."
+    (file) => file.type === "application/pdf",
+    "Solo se permiten documentos PDF."
   )
   .refine((file) => file.size > 0, "El archivo del CV no puede estar vacío.");
 
@@ -38,6 +32,12 @@ export type FormState = {
   } | null;
 };
 
+async function fileToDataURI(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  return `data:${file.type};base64,${base64}`;
+}
+
 export async function performCvAnalysis(
   prevState: FormState,
   formData: FormData
@@ -57,16 +57,6 @@ export async function performCvAnalysis(
   }
 
   const { jobDescription, cvs } = validatedFields.data;
-
-  async function fileToDataURI(file: File): Promise<string> {
-    const buffer = await file.arrayBuffer();
-    if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.type === "application/msword") {
-      const { value } = await mammoth.extractRawText({ buffer });
-      return value;
-    }
-    const base64 = Buffer.from(buffer).toString("base64");
-    return `data:${file.type};base64,${base64}`;
-  }
 
   try {
     const cvData = await Promise.all(
