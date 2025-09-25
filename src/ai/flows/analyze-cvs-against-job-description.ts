@@ -55,7 +55,7 @@ Job Description: {{{jobDescription}}}
 
 CVs:
 {{#each cvs}}
-  - {{this}}
+- {{media url=this}}
 {{/each}}
 
 For each CV, you will provide a match score (0-100) and a brief explanation of how you determined the score. Return the results in JSON format.

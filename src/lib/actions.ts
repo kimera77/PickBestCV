@@ -54,24 +54,25 @@ export async function performCvAnalysis(
   const { jobDescription, cvs } = validatedFields.data;
 
   try {
-    const dataUriMap = new Map<string, string>();
-    const dataUris = await Promise.all(
-      cvs.map(async (file) => {
-        const uri = await fileToDataURI(file);
-        dataUriMap.set(uri, file.name);
-        return uri;
-      })
+    const cvData = await Promise.all(
+        cvs.map(async (file) => ({
+            fileName: file.name,
+            dataUri: await fileToDataURI(file),
+        }))
     );
 
     const result = await analyzeCVsAgainstJobDescription({
       jobDescription,
-      cvs: dataUris,
+      cvs: cvData.map(cv => cv.dataUri),
     });
 
-    const candidateMatchesWithFilenames: CandidateMatch[] = result.candidateMatches.map(match => ({
-      ...match,
-      cv: dataUriMap.get(match.cv) || 'CV desconocido',
-    })).sort((a, b) => b.matchScore - a.matchScore);
+    const candidateMatchesWithFilenames: CandidateMatch[] = result.candidateMatches.map(match => {
+        const originalCv = cvData.find(cv => cv.dataUri === match.cv);
+        return {
+          ...match,
+          cv: originalCv?.fileName || 'CV desconocido',
+        };
+    }).sort((a, b) => b.matchScore - a.matchScore);
 
     return {
       message: "Análisis exitoso.",
