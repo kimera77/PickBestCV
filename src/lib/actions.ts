@@ -1,7 +1,7 @@
 
 "use server";
 
-import { analyzeCVsAgainstJobDescription } from "@/ai/flows/analyze-cvs-against-job-description";
+import { analyzeSingleCv } from "@/ai/flows/analyze-single-cv";
 import { z } from "zod";
 import type { CandidateMatch } from "./types";
 
@@ -59,32 +59,21 @@ export async function performCvAnalysis(
   const { jobDescription, cvs } = validatedFields.data;
 
   try {
-    const cvData = await Promise.all(
-      cvs.map(async (file) => ({
-        fileName: file.name,
-        data: await fileToDataURI(file),
-      }))
-    );
-
-    const result = await analyzeCVsAgainstJobDescription({
-      jobDescription,
-      cvs: cvData.map((cv) => cv.data),
+    const analysisPromises = cvs.map(async (file) => {
+      const cvDataUri = await fileToDataURI(file);
+      const result = await analyzeSingleCv({
+        jobDescription,
+        cv: cvDataUri,
+      });
+      return { ...result, cv: file.name };
     });
 
-    const candidateMatchesWithFilenames: CandidateMatch[] =
-      result.candidateMatches
-        .map((match, index) => {
-          const originalCv = cvData[index];
-          return {
-            ...match,
-            cv: originalCv?.fileName || "CV desconocido",
-          };
-        })
-        .sort((a, b) => b.matchScore - a.matchScore);
+    const results = await Promise.all(analysisPromises);
+    const sortedResults = results.sort((a, b) => b.matchScore - a.matchScore);
 
     return {
       message: "Análisis exitoso.",
-      analysis: { candidateMatches: candidateMatchesWithFilenames },
+      analysis: { candidateMatches: sortedResults },
     };
   } catch (e) {
     console.error(e);
