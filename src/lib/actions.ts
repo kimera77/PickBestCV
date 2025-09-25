@@ -38,16 +38,6 @@ export type FormState = {
   } | null;
 };
 
-async function fileToDataURI(file: File) {
-  const buffer = await file.arrayBuffer();
-  if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-    const { value } = await mammoth.extractRawText({ buffer });
-    return value;
-  }
-  const base64 = Buffer.from(buffer).toString("base64");
-  return `data:${file.type};base64,${base64}`;
-}
-
 export async function performCvAnalysis(
   prevState: FormState,
   formData: FormData
@@ -68,12 +58,21 @@ export async function performCvAnalysis(
 
   const { jobDescription, cvs } = validatedFields.data;
 
+  async function fileToDataURI(file: File): Promise<string> {
+    const buffer = await file.arrayBuffer();
+    if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || file.type === "application/msword") {
+      const { value } = await mammoth.extractRawText({ buffer });
+      return value;
+    }
+    const base64 = Buffer.from(buffer).toString("base64");
+    return `data:${file.type};base64,${base64}`;
+  }
+
   try {
     const cvData = await Promise.all(
       cvs.map(async (file) => ({
         fileName: file.name,
         data: await fileToDataURI(file),
-        isText: file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       }))
     );
 
@@ -85,7 +84,6 @@ export async function performCvAnalysis(
     const candidateMatchesWithFilenames: CandidateMatch[] =
       result.candidateMatches
         .map((match, index) => {
-           // We need to find the original CV based on the index because text-based CVs won't have a data URI to match on.
           const originalCv = cvData[index];
           return {
             ...match,
