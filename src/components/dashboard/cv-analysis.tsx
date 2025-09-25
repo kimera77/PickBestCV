@@ -28,12 +28,12 @@ function SubmitButton() {
             {pending ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
+                    Analizando...
                 </>
             ) : (
                 <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Analyze CVs
+                    Analizar CVs
                 </>
             )}
         </Button>
@@ -49,7 +49,7 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
     if (formState.message && formState.errors) {
       toast({
         variant: "destructive",
-        title: "Analysis Failed",
+        title: "Análisis fallido",
         description: formState.message,
       });
     }
@@ -59,8 +59,8 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
     return (
       <div className="flex h-full min-h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card">
         <div className="text-center">
-          <p className="text-lg font-medium text-muted-foreground">Select a job template to begin</p>
-          <p className="text-sm text-muted-foreground">Once you select a template, you can upload CVs for analysis.</p>
+          <p className="text-lg font-medium text-muted-foreground">Selecciona una plantilla de trabajo para empezar</p>
+          <p className="text-sm text-muted-foreground">Una vez que selecciones una plantilla, podrás subir CVs para su análisis.</p>
         </div>
       </div>
     );
@@ -72,9 +72,9 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
             <input type="hidden" name="jobDescription" value={selectedTemplate.description} />
             <Card>
                 <CardHeader>
-                    <CardTitle>1. Upload CVs</CardTitle>
+                    <CardTitle>1. Subir CVs</CardTitle>
                     <CardDescription>
-                        Upload the CVs (PDF or Word) you want to analyze against the &quot;{selectedTemplate.title}&quot; position.
+                        Sube los CVs (PDF o Word) que quieras analizar para el puesto de &quot;{selectedTemplate.title}&quot;.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

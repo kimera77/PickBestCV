@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Briefcase,
+  FileScan,
   CircleUser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LanguageSwitcher from "./language-switcher";
 
 export default function Header() {
   return (
@@ -21,12 +22,13 @@ export default function Header() {
           href="#"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
-          <Briefcase className="h-6 w-6 text-primary" />
-          <span className="font-bold">CV Match Pro</span>
+          <FileScan className="h-6 w-6 text-primary" />
+          <span className="font-bold">CVMatch</span>
         </Link>
       </nav>
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <div className="ml-auto flex-1 sm:flex-initial" />
+        <LanguageSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
@@ -35,13 +37,13 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Perfil</DropdownMenuItem>
+            <DropdownMenuItem>Ajustes</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link href="/login">Logout</Link>
+                <Link href="/login">Cerrar sesión</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

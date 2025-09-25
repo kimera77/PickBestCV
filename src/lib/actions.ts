@@ -7,12 +7,12 @@ import type { CandidateMatch } from "./types";
 const CvFileSchema = z.instanceof(File).refine(
   (file) =>
     ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type),
-  "Only PDF and Word documents are allowed."
-).refine((file) => file.size > 0, "CV file cannot be empty.");
+  "Solo se permiten documentos PDF y Word."
+).refine((file) => file.size > 0, "El archivo del CV no puede estar vacío.");
 
 const FormSchema = z.object({
-  jobDescription: z.string().min(1, "Job description is required."),
-  cvs: z.array(CvFileSchema).min(1, "At least one CV is required."),
+  jobDescription: z.string().min(1, "La descripción del trabajo es obligatoria."),
+  cvs: z.array(CvFileSchema).min(1, "Se requiere al menos un CV."),
 });
 
 export type FormState = {
@@ -45,7 +45,7 @@ export async function performCvAnalysis(
 
   if (!validatedFields.success) {
     return {
-      message: "Validation failed. Please check your inputs.",
+      message: "La validación ha fallado. Por favor, comprueba tus datos.",
       errors: validatedFields.error.flatten().fieldErrors,
       analysis: null,
     };
@@ -70,19 +70,19 @@ export async function performCvAnalysis(
 
     const candidateMatchesWithFilenames: CandidateMatch[] = result.candidateMatches.map(match => ({
       ...match,
-      cv: dataUriMap.get(match.cv) || 'Unknown CV',
+      cv: dataUriMap.get(match.cv) || 'CV desconocido',
     })).sort((a, b) => b.matchScore - a.matchScore);
 
     return {
-      message: "Analysis successful.",
+      message: "Análisis exitoso.",
       analysis: { candidateMatches: candidateMatchesWithFilenames },
     };
   } catch (e) {
     console.error(e);
     return {
-      message: "An error occurred during analysis.",
+      message: "Ocurrió un error durante el análisis.",
       errors: {
-        _form: ["Something went wrong on the server. Please try again."],
+        _form: ["Algo salió mal en el servidor. Por favor, inténtalo de nuevo."],
       },
       analysis: null,
     };

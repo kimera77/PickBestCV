@@ -59,14 +59,14 @@ export default function CvUpload({ name, files, setFiles }: CvUploadProps) {
         <input {...getInputProps()} />
         <UploadCloud className="w-12 h-12 text-muted-foreground" />
         <p className="mt-4 text-lg text-center text-muted-foreground">
-          {isDragActive ? 'Drop the files here...' : 'Drag & drop CVs here, or click to select files'}
+          {isDragActive ? 'Suelta los archivos aquí...' : 'Arrastra y suelta los CVs aquí, o haz clic para seleccionar los archivos'}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">(PDF or Word documents)</p>
+        <p className="text-sm text-muted-foreground mt-1">(Documentos PDF o Word)</p>
       </div>
 
       {files.length > 0 && (
         <div className="mt-4">
-          <h4 className="font-medium">Uploaded Files:</h4>
+          <h4 className="font-medium">Archivos subidos:</h4>
           <ul className="mt-2 space-y-2">
             {files.map((file, index) => (
               <li

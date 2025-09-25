@@ -24,15 +24,15 @@ export default function JobTemplates({
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="grid gap-2">
-          <CardTitle>Job Templates</CardTitle>
+          <CardTitle>Plantillas de trabajo</CardTitle>
           <CardDescription>
-            Select or create a template for analysis.
+            Selecciona o crea una plantilla para el análisis.
           </CardDescription>
         </div>
         <JobTemplateForm onSave={onCreateTemplate}>
           <Button size="sm" className="gap-1">
             <PlusCircle className="h-4 w-4" />
-            New Template
+            Nueva plantilla
           </Button>
         </JobTemplateForm>
       </CardHeader>
@@ -40,7 +40,7 @@ export default function JobTemplates({
         <div className="space-y-4">
             {templates.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
-                    No templates created yet.
+                    Aún no se han creado plantillas.
                 </div>
             ) : (
                 templates.map((template) => (

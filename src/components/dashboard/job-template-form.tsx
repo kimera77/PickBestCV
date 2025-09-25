@@ -40,40 +40,40 @@ export default function JobTemplateForm({ children, onSave }: JobTemplateFormPro
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Job Template</DialogTitle>
+          <DialogTitle>Crear plantilla de trabajo</DialogTitle>
           <DialogDescription>
-            Fill in the details for the new job position. This will be used for CV analysis.
+            Rellena los detalles para el nuevo puesto de trabajo. Se utilizará para el análisis de CV.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">
-              Title
+              Título
             </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="col-span-3"
-              placeholder="e.g. Senior Frontend Developer"
+              placeholder="Ej: Desarrollador Frontend Senior"
             />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="description" className="text-right pt-2">
-              Description
+              Descripción
             </Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3 min-h-[120px]"
-              placeholder="Describe the job role, responsibilities, and requirements."
+              placeholder="Describe el puesto, las responsabilidades y los requisitos."
             />
           </div>
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleSave} disabled={!title || !description}>
-            Save Template
+            Guardar plantilla
           </Button>
         </DialogFooter>
       </DialogContent>

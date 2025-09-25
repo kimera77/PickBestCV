@@ -43,16 +43,16 @@ const ResultCard = ({ match }: { match: CandidateMatch }) => (
                         </Avatar>
                         <div className="flex-1 space-y-1">
                             <p className="text-sm font-medium leading-none truncate">{match.cv}</p>
-                            <p className="text-sm text-muted-foreground">Match Score: {match.matchScore}%</p>
+                            <p className="text-sm text-muted-foreground">Puntuación de coincidencia: {match.matchScore}%</p>
                             <Progress value={match.matchScore} className="h-2" />
                         </div>
                         <Badge variant={getBadgeVariant(match.matchScore)} className="hidden sm:inline-flex">
-                            {match.matchScore}% Match
+                            {match.matchScore}% de coincidencia
                         </Badge>
                         <AccordionTrigger className="p-2 [&[data-state=open]>svg]:rotate-180" />
                     </div>
                     <AccordionContent className="pt-4 pl-16">
-                        <h4 className="font-semibold mb-2">Analysis Reasoning:</h4>
+                        <h4 className="font-semibold mb-2">Razonamiento del análisis:</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{match.reasoning}</p>
                     </AccordionContent>
                 </AccordionItem>
@@ -89,9 +89,9 @@ export default function AnalysisResults({ result, isLoading }: AnalysisResultsPr
     return (
         <Card>
             <CardHeader>
-                <CardTitle>2. Analysis Results</CardTitle>
+                <CardTitle>2. Resultados del análisis</CardTitle>
                 <CardDescription>
-                    The AI is analyzing the CVs. This may take a moment.
+                    La IA está analizando los CVs. Esto puede tardar un momento.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -108,9 +108,9 @@ export default function AnalysisResults({ result, isLoading }: AnalysisResultsPr
   return (
     <Card>
       <CardHeader>
-        <CardTitle>2. Analysis Results</CardTitle>
+        <CardTitle>2. Resultados del análisis</CardTitle>
         <CardDescription>
-          Ranked list of candidates based on their match with the job description.
+          Lista clasificada de candidatos según su coincidencia con la descripción del trabajo.
         </CardDescription>
       </CardHeader>
       <CardContent>

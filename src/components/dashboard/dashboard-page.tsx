@@ -8,18 +8,18 @@ import CvAnalysis from "./cv-analysis";
 const initialTemplates: JobTemplate[] = [
   {
     id: '1',
-    title: 'Senior Frontend Developer',
-    description: 'Seeking a skilled frontend developer with 5+ years of experience in React, TypeScript, and modern web technologies. Experience with Next.js and GraphQL is a plus.'
+    title: 'Desarrollador Frontend Senior',
+    description: 'Buscamos un desarrollador frontend con más de 5 años de experiencia en React, TypeScript y tecnologías web modernas. La experiencia con Next.js y GraphQL es una ventaja.'
   },
   {
     id: '2',
-    title: 'UX/UI Designer',
-    description: 'Creative UX/UI designer needed to create intuitive and beautiful user experiences. Proficient in Figma, Sketch, and Adobe Creative Suite.'
+    title: 'Diseñador UX/UI',
+    description: 'Se necesita un diseñador UX/UI creativo para crear experiencias de usuario intuitivas y atractivas. Competente en Figma, Sketch y Adobe Creative Suite.'
   },
     {
     id: '3',
-    title: 'Backend Python Engineer',
-    description: 'Experienced Backend Engineer specializing in Python, Django, and REST APIs. Strong understanding of database design and microservices architecture.'
+    title: 'Ingeniero Backend Python',
+    description: 'Ingeniero Backend con experiencia en Python, Django y APIs REST. Sólidos conocimientos de diseño de bases de datos y arquitectura de microservicios.'
   }
 ];
 
