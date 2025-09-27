@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import LanguageSwitcher from "./language-switcher";
+import { handleSignOut } from "@/lib/auth/actions";
+import { UserAvatar } from "./user-avatar";
 
 export default function Header() {
   return (
@@ -32,7 +34,7 @@ export default function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
-              <CircleUser className="h-5 w-5" />
+              <UserAvatar />
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -42,9 +44,13 @@ export default function Header() {
             <DropdownMenuItem>Perfil</DropdownMenuItem>
             <DropdownMenuItem>Ajustes</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/login">Cerrar sesión</Link>
-            </DropdownMenuItem>
+             <form action={handleSignOut} className="w-full">
+                <button type="submit" className="w-full">
+                  <DropdownMenuItem>
+                    Cerrar sesión
+                  </DropdownMenuItem>
+                </button>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

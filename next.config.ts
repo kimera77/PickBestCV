@@ -30,6 +30,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+   webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Ensures firebase client SDK is not bundled on the server
+      config.externals.push('firebase-admin');
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

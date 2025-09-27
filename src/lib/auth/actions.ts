@@ -1,0 +1,143 @@
+"use server";
+
+import { z } from "zod";
+import { getFirebaseAuth } from "next-firebase-auth-edge/lib/auth";
+import { cookies } from "next/headers";
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+const serverAuth = getFirebaseAuth({
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  serviceAccount: {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  },
+});
+
+const signUpSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+});
+
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+async function setAuthCookies(idToken: string) {
+  const tokens = await serverAuth.getTokens(idToken);
+  const session = await serverAuth.createSession(tokens.token, {
+    // optional session claims
+  });
+
+  cookies().set("session", session, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    sameSite: "lax",
+  });
+}
+
+function getFirebaseErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+        case 'auth/email-already-in-use':
+            return 'Este correo electrónico ya está en uso por otra cuenta.';
+        case 'auth/invalid-email':
+            return 'El formato del correo electrónico no es válido.';
+        case 'auth/operation-not-allowed':
+            return 'El inicio de sesión con correo y contraseña no está habilitado.';
+        case 'auth/weak-password':
+            return 'La contraseña es demasiado débil.';
+        case 'auth/user-disabled':
+            return 'Este usuario ha sido deshabilitado.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+            return 'Correo electrónico o contraseña incorrectos.';
+        default:
+            return 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.';
+    }
+}
+
+
+export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
+  try {
+    const validated = signUpSchema.parse(values);
+    const { email, password, firstName, lastName } = validated;
+
+    // The `createUser` method is not available in the server-side SDK provided by `next-firebase-auth-edge`.
+    // We need to use the client-side `createUserWithEmailAndPassword` and then get the ID token.
+    // This is a workaround. A better approach would be to use a custom endpoint or Firebase Functions.
+    // For this example, we'll assume the user is created on the client, and we just sign them in.
+    
+    // As we can't create a user directly on the server with this library,
+    // this will create a custom token and the client needs to sign in with it.
+    // A better approach is usually to handle user creation on the client-side.
+    // For simplicity, we are going to simulate user creation then sign-in.
+    // Let's call the REST API to create the user.
+    
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email,
+            password,
+            displayName: `${firstName} ${lastName}`,
+            returnSecureToken: true
+        })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        return { error: getFirebaseErrorMessage(data.error.message) };
+    }
+
+    await setAuthCookies(data.idToken);
+    
+    return { success: true };
+  } catch (e: any) {
+    return { error: getFirebaseErrorMessage(e.code) };
+  }
+}
+
+export async function handleSignIn(values: z.infer<typeof signInSchema>) {
+  try {
+    const { email, password } = signInSchema.parse(values);
+
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email,
+            password,
+            returnSecureToken: true
+        })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        return { error: getFirebaseErrorMessage(data.error.message) };
+    }
+
+    await setAuthCookies(data.idToken);
+    
+    return { success: true };
+  } catch (e: any) {
+    return { error: getFirebaseErrorMessage(e.code) };
+  }
+}
+
+export async function handleSignOut() {
+    cookies().delete("session");
+    revalidatePath('/');
+    redirect('/');
+}

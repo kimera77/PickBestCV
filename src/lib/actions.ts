@@ -1,10 +1,8 @@
-
 "use server";
 
 import { analyzeSingleCv } from "@/ai/flows/analyze-single-cv";
 import { z } from "zod";
 import type { CandidateMatch } from "./types";
-import {fromBuffer} from "pdf2pic";
 
 const CvFileSchema = z
   .instanceof(File)
@@ -13,6 +11,7 @@ const CvFileSchema = z
     "Solo se permiten documentos PDF."
   )
   .refine((file) => file.size > 0, "El archivo del CV no puede estar vacío.");
+
 
 const FormSchema = z.object({
   jobDescription: z
@@ -35,9 +34,9 @@ export type FormState = {
 };
 
 async function fileToDataURI(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString("base64");
-  return `data:${file.type};base64,${base64}`;
+    const buffer = await file.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    return `data:${file.type};base64,${base64}`;
 }
 
 

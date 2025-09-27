@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,35 +16,76 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
 
 type JobTemplateFormProps = {
-  children: React.ReactNode;
-  onSave: (template: Omit<JobTemplate, "id">) => void;
+  children?: React.ReactNode;
+  templateToEdit?: JobTemplate | null;
+  onTemplateSaved: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export default function JobTemplateForm({ children, onSave }: JobTemplateFormProps) {
-  const [open, setOpen] = useState(false);
+export default function JobTemplateForm({ children, templateToEdit, onTemplateSaved, open: controlledOpen, onOpenChange: setControlledOpen }: JobTemplateFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = setControlledOpen ?? setInternalOpen;
+  
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const handleSave = () => {
-    if (title && description) {
-      onSave({ title, description });
+  const isEditing = !!templateToEdit;
+
+  useEffect(() => {
+    if (isEditing && open) {
+      setTitle(templateToEdit.title);
+      setDescription(templateToEdit.description);
+    } else {
       setTitle("");
       setDescription("");
+    }
+  }, [templateToEdit, isEditing, open]);
+
+  const handleSave = async () => {
+    if (!title || !description) return;
+
+    setIsSaving(true);
+    try {
+      if (isEditing) {
+        await updateJobTemplate({ id: templateToEdit.id, title, description });
+      } else {
+        await createJobTemplate({ title, description });
+      }
+      onTemplateSaved();
+      toast({
+        title: `Plantilla ${isEditing ? 'actualizada' : 'creada'}`,
+        description: `La plantilla de trabajo se ha ${isEditing ? 'actualizado' : 'creado'} con éxito.`,
+      });
       setOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error al guardar",
+        description: `No se pudo ${isEditing ? 'actualizar' : 'crear'} la plantilla. Por favor, inténtalo de nuevo.`,
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Crear plantilla de trabajo</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar' : 'Crear'} plantilla de trabajo</DialogTitle>
           <DialogDescription>
-            Rellena los detalles para el nuevo puesto de trabajo. Se utilizará para el análisis de CV.
+             {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo. Se utilizará para el análisis de CV.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -77,9 +118,15 @@ export default function JobTemplateForm({ children, onSave }: JobTemplateFormPro
             <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
             </DialogClose>
-          <Button type="submit" onClick={handleSave} disabled={!title || !description}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Guardar plantilla
+          <Button onClick={handleSave} disabled={!title || !description || isSaving}>
+            {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : isEditing ? (
+                <Save className="mr-2 h-4 w-4" />
+            ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+            )}
+            {isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear plantilla'}
           </Button>
         </DialogFooter>
       </DialogContent>

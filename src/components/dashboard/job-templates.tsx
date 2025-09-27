@@ -3,25 +3,70 @@
 import type { JobTemplate } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, CheckCircle2 } from "lucide-react";
+import { PlusCircle, CheckCircle2, MoreVertical, Edit, Trash2 } from "lucide-react";
 import JobTemplateForm from "./job-template-form";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useState } from "react";
+import { deleteJobTemplate } from "@/lib/db/actions";
+import { useToast } from "@/hooks/use-toast";
 
 type JobTemplatesProps = {
   templates: JobTemplate[];
   selectedTemplate: JobTemplate | null;
   setSelectedTemplate: (template: JobTemplate | null) => void;
-  onCreateTemplate: (template: Omit<JobTemplate, "id">) => void;
+  onTemplateUpdate: () => void;
 };
 
 export default function JobTemplates({
   templates,
   selectedTemplate,
   setSelectedTemplate,
-  onCreateTemplate,
+  onTemplateUpdate,
 }: JobTemplatesProps) {
+  const { toast } = useToast();
+  const [editingTemplate, setEditingTemplate] = useState<JobTemplate | null>(null);
+
+  const handleDelete = async (templateId: string) => {
+    try {
+      await deleteJobTemplate(templateId);
+      onTemplateUpdate();
+       toast({
+        title: "Plantilla eliminada",
+        description: "La plantilla de trabajo ha sido eliminada con éxito.",
+      });
+      if (selectedTemplate?.id === templateId) {
+        setSelectedTemplate(null);
+      }
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: "No se pudo eliminar la plantilla. Por favor, inténtalo de nuevo.",
+      });
+    }
+  };
+
+
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="grid gap-2">
           <CardTitle>Plantillas de trabajo</CardTitle>
@@ -29,14 +74,14 @@ export default function JobTemplates({
             Selecciona o crea una plantilla para el análisis.
           </CardDescription>
         </div>
-        <JobTemplateForm onSave={onCreateTemplate}>
-          <Button size="sm" className="gap-1 font-semibold">
-            <PlusCircle className="h-4 w-4" />
-            Nueva plantilla
-          </Button>
-        </JobTemplateForm>
+         <JobTemplateForm onTemplateSaved={onTemplateUpdate}>
+            <Button size="sm" className="gap-1 font-semibold">
+              <PlusCircle className="h-4 w-4" />
+              Nueva plantilla
+            </Button>
+          </JobTemplateForm>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-auto">
         <div className="space-y-4">
             {templates.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
@@ -53,21 +98,76 @@ export default function JobTemplates({
                         onClick={() => setSelectedTemplate(template)}
                     >
                         <CardContent className="p-4 relative">
-                           <div className="grid gap-1">
+                           <div className="grid gap-1 pr-8">
                              <CardTitle className="text-base font-semibold">{template.title}</CardTitle>
                              <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
                            </div>
-                           {selectedTemplate?.id === template.id && (
-                                <div className="absolute top-3 right-3 h-6 w-6 bg-primary rounded-full text-primary-foreground flex items-center justify-center">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                </div>
-                            )}
+
+                           <div className="absolute top-3 right-3 flex items-center gap-1">
+                                {selectedTemplate?.id === template.id && (
+                                    <div className="h-6 w-6 bg-primary rounded-full text-primary-foreground flex items-center justify-center">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                    </div>
+                                )}
+                                <AlertDialog>
+                                  <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-70 group-hover:opacity-100">
+                                              <MoreVertical className="h-4 w-4" />
+                                          </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <JobTemplateForm 
+                                            templateToEdit={template}
+                                            onTemplateSaved={() => {
+                                                onTemplateUpdate();
+                                            }}
+                                        >
+                                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                <Edit className="mr-2 h-4 w-4"/>
+                                                <span>Editar</span>
+                                            </DropdownMenuItem>
+                                        </JobTemplateForm>
+                                        <DropdownMenuSeparator />
+                                         <AlertDialogTrigger asChild>
+                                           <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(e) => e.preventDefault()}>
+                                              <Trash2 className="mr-2 h-4 w-4"/>
+                                              <span>Eliminar</span>
+                                          </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                      </DropdownMenuContent>
+                                  </DropdownMenu>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta acción no se puede deshacer. Esto eliminará permanentemente la plantilla de trabajo.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(template.id)} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </CardContent>
                     </Card>
                 ))
             )}
         </div>
       </CardContent>
+       {editingTemplate && (
+          <JobTemplateForm
+            templateToEdit={editingTemplate}
+            onTemplateSaved={() => {
+              setEditingTemplate(null);
+              onTemplateUpdate();
+            }}
+            open={!!editingTemplate}
+            onOpenChange={(isOpen) => !isOpen && setEditingTemplate(null)}
+          />
+        )}
     </Card>
   );
 }

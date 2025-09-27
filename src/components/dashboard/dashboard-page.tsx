@@ -1,37 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { JobTemplate } from "@/lib/types";
 import JobTemplates from "./job-templates";
 import CvAnalysis from "./cv-analysis";
 import { LanguageProvider } from "./language-provider";
+import { getJobTemplates } from "@/lib/db/actions";
 
-const initialTemplates: JobTemplate[] = [
-  {
-    id: '1',
-    title: 'Desarrollador Frontend Senior',
-    description: 'Buscamos un desarrollador frontend con más de 5 años de experiencia en React, TypeScript y tecnologías web modernas. La experiencia con Next.js y GraphQL es una ventaja.'
-  },
-  {
-    id: '2',
-    title: 'Diseñador UX/UI',
-    description: 'Se necesita un diseñador UX/UI creativo para crear experiencias de usuario intuitivas y atractivas. Competente en Figma, Sketch y Adobe Creative Suite.'
-  },
-    {
-    id: '3',
-    title: 'Ingeniero Backend Python',
-    description: 'Ingeniero Backend con experiencia en Python, Django y APIs REST. Sólidos conocimientos de diseño de bases de datos y arquitectura de microservicios.'
-  }
-];
+type DashboardPageClientProps = {
+  initialTemplates: JobTemplate[];
+}
 
-export default function DashboardPageClient() {
+export default function DashboardPageClient({ initialTemplates }: DashboardPageClientProps) {
   const [templates, setTemplates] = useState<JobTemplate[]>(initialTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
 
-  const handleCreateTemplate = (newTemplate: Omit<JobTemplate, 'id'>) => {
-    const templateWithId = { ...newTemplate, id: Date.now().toString() };
-    setTemplates(prev => [templateWithId, ...prev]);
-  };
+  const refreshTemplates = useCallback(async () => {
+    const freshTemplates = await getJobTemplates();
+    setTemplates(freshTemplates);
+  }, []);
   
   return (
     <LanguageProvider>
@@ -40,7 +27,7 @@ export default function DashboardPageClient() {
                 templates={templates}
                 selectedTemplate={selectedTemplate}
                 setSelectedTemplate={setSelectedTemplate}
-                onCreateTemplate={handleCreateTemplate}
+                onTemplateUpdate={refreshTemplates}
             />
             <div className="lg:col-span-2 xl:col-span-2">
                 <CvAnalysis selectedTemplate={selectedTemplate} />
