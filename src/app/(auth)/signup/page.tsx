@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { BrainCircuit, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -26,6 +26,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { handleSignUp } from "@/lib/auth/actions";
+import { Logo } from "@/components/logo";
 
 
 const formSchema = z.object({
@@ -64,8 +65,8 @@ export default function SignupPage() {
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
-            <BrainCircuit className="h-10 w-10 text-primary" />
-            <CardTitle className="text-3xl font-bold">CVMatch</CardTitle>
+            <Logo className="h-12 w-12 text-primary" />
+            <CardTitle className="text-3xl font-bold tracking-tighter">HireIQ</CardTitle>
             <CardDescription className="text-balance">
               Introduce tus datos para crear una cuenta y empezar a analizar CVs
             </CardDescription>

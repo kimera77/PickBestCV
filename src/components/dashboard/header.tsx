@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  BrainCircuit,
   CircleUser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import {
 import LanguageSwitcher from "./language-switcher";
 import { handleSignOut } from "@/lib/auth/actions";
 import { UserAvatar } from "./user-avatar";
+import { Logo } from "../logo";
 
 export default function Header() {
   return (
@@ -24,8 +24,8 @@ export default function Header() {
           href="#"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
-          <BrainCircuit className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">CVMatch</span>
+          <Logo className="h-7 w-7 text-primary" />
+          <span className="font-bold text-xl tracking-tight">HireIQ</span>
         </Link>
       </nav>
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">

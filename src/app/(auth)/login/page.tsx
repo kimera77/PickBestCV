@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BrainCircuit, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -27,6 +27,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { handleSignIn } from "@/lib/auth/actions";
+import { Logo } from "@/components/logo";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
@@ -59,8 +60,8 @@ export default function LoginPage() {
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
-          <BrainCircuit className="h-10 w-10 text-primary" />
-          <CardTitle className="text-3xl font-bold">CVMatch</CardTitle>
+          <Logo className="h-12 w-12 text-primary" />
+          <CardTitle className="text-3xl font-bold tracking-tighter">HireIQ</CardTitle>
           <CardDescription className="text-balance">
             Introduce tu correo electrónico para acceder a tu cuenta
           </CardDescription>

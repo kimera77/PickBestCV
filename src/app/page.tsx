@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { ArrowRight } from 'lucide-react';
+import { Logo } from "@/components/logo";
 
 
 export default function RootPage() {
@@ -9,8 +9,8 @@ export default function RootPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="px-4 lg:px-6 h-16 flex items-center shadow-sm">
         <Link href="/" className="flex items-center justify-center gap-2">
-          <BrainCircuit className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">CVMatch</span>
+          <Logo className="h-7 w-7 text-primary" />
+          <span className="text-xl font-bold tracking-tight">HireIQ</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Button variant="ghost" asChild>
@@ -31,7 +31,7 @@ export default function RootPage() {
                     Optimiza tu contratación con Inteligencia Artificial
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    CVMatch utiliza IA para analizar currículums y encontrar al candidato ideal para tus ofertas de trabajo. Ahorra tiempo, reduce sesgos y contrata de manera más inteligente.
+                    HireIQ utiliza IA para analizar currículums y encontrar al candidato ideal para tus ofertas de trabajo. Ahorra tiempo, reduce sesgos y contrata de manera más inteligente.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -56,7 +56,7 @@ export default function RootPage() {
         </section>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-muted-foreground">&copy; 2024 CVMatch. Todos los derechos reservados.</p>
+        <p className="text-xs text-muted-foreground">&copy; 2024 HireIQ. Todos los derechos reservados.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4" prefetch={false}>
             Términos de servicio
