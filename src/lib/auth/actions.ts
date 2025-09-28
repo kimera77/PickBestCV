@@ -69,15 +69,16 @@ function getFirebaseErrorMessage(errorCode: string): string {
 
 
 export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
+  const validated = signUpSchema.safeParse(values);
+
+  if (!validated.success) {
+    const errorMessages = validated.error.errors.map(e => e.message).join(' ');
+    return { error: `Los datos proporcionados no son válidos: ${errorMessages}` };
+  }
+
+  const { email, password, firstName, lastName } = validated.data;
+  
   try {
-    const validated = signUpSchema.safeParse(values);
-
-    if (!validated.success) {
-      return { error: 'Los datos proporcionados no son válidos.' };
-    }
-
-    const { email, password, firstName, lastName } = validated.data;
-    
     const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
         method: 'POST',
         headers: {
