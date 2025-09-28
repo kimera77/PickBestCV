@@ -63,7 +63,7 @@ function getFirebaseErrorMessage(errorCode: string): string {
         case 'auth/invalid-credential':
             return 'Correo electrónico o contraseña incorrectos.';
         default:
-            return 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.';
+            return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
     }
 }
 
@@ -78,64 +78,60 @@ export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
 
   const { email, password, firstName, lastName } = validated.data;
   
-  try {
-    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            email,
-            password,
-            displayName: `${firstName} ${lastName}`,
-            returnSecureToken: true
-        })
-    });
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          email,
+          password,
+          displayName: `${firstName} ${lastName}`,
+          returnSecureToken: true
+      })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!res.ok) {
-        return { error: getFirebaseErrorMessage(data?.error?.message) };
-    }
-
-    await setAuthCookies(data.idToken);
-    
-    return { success: true };
-  } catch (e: any) {
-    console.error(e);
-    return { error: 'Ha ocurrido un error en el servidor. Por favor, inténtalo de nuevo.' };
+  if (!res.ok) {
+      return { error: getFirebaseErrorMessage(data?.error?.message) };
   }
+
+  await setAuthCookies(data.idToken);
+  
+  return { success: true };
 }
 
 export async function handleSignIn(values: z.infer<typeof signInSchema>) {
-  try {
-    const { email, password } = signInSchema.parse(values);
-
-    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            email,
-            password,
-            returnSecureToken: true
-        })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        return { error: getFirebaseErrorMessage(data?.error?.message) };
-    }
-
-    await setAuthCookies(data.idToken);
-    
-    return { success: true };
-  } catch (e: any) {
-     console.error(e);
-    return { error: 'Ha ocurrido un error en el servidor. Por favor, inténtalo de nuevo.' };
+  const validated = signInSchema.safeParse(values);
+  if (!validated.success) {
+      const errorMessages = validated.error.errors.map(e => e.message).join(' ');
+      return { error: `Los datos proporcionados no son válidos: ${errorMessages}` };
   }
+
+  const { email, password } = validated.data;
+
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          email,
+          password,
+          returnSecureToken: true
+      })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+      return { error: getFirebaseErrorMessage(data?.error?.message) };
+  }
+
+  await setAuthCookies(data.idToken);
+  
+  return { success: true };
 }
 
 export async function handleSignOut() {
