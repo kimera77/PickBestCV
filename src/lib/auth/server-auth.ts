@@ -1,5 +1,3 @@
-'use server';
-
 import { getFirebaseAuth } from "next-firebase-auth-edge/lib/auth";
 
 const serviceAccount = {
