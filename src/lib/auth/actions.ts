@@ -43,16 +43,21 @@ async function setAuthCookies(idToken: string) {
 
 function getFirebaseErrorMessage(errorCode: string): string {
     switch (errorCode) {
+        case 'EMAIL_EXISTS':
         case 'auth/email-already-in-use':
             return 'Este correo electrónico ya está en uso por otra cuenta.';
+        case 'INVALID_EMAIL':
         case 'auth/invalid-email':
             return 'El formato del correo electrónico no es válido.';
+        case 'OPERATION_NOT_ALLOWED':
         case 'auth/operation-not-allowed':
             return 'El inicio de sesión con correo y contraseña no está habilitado.';
+        case 'WEAK_PASSWORD':
         case 'auth/weak-password':
             return 'La contraseña es demasiado débil.';
         case 'auth/user-disabled':
             return 'Este usuario ha sido deshabilitado.';
+        case 'INVALID_LOGIN_CREDENTIALS':
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
@@ -96,7 +101,8 @@ export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
     
     return { success: true };
   } catch (e: any) {
-    return { error: getFirebaseErrorMessage(e.code) };
+    console.error(e);
+    return { error: getFirebaseErrorMessage(e?.code) };
   }
 }
 
@@ -126,7 +132,8 @@ export async function handleSignIn(values: z.infer<typeof signInSchema>) {
     
     return { success: true };
   } catch (e: any) {
-    return { error: getFirebaseErrorMessage(e.code) };
+     console.error(e);
+    return { error: getFirebaseErrorMessage(e?.code) };
   }
 }
 
