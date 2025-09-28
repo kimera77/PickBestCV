@@ -16,10 +16,10 @@ const serverAuth = getFirebaseAuth({
 });
 
 const signUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  firstName: z.string().min(1, { message: "El nombre es obligatorio." }),
+  lastName: z.string().min(1, { message: "Los apellidos son obligatorios." }),
+  email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
 });
 
 const signInSchema = z.object({
@@ -65,19 +65,13 @@ function getFirebaseErrorMessage(errorCode: string): string {
 
 export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
   try {
-    const validated = signUpSchema.parse(values);
-    const { email, password, firstName, lastName } = validated;
+    const validated = signUpSchema.safeParse(values);
 
-    // The `createUser` method is not available in the server-side SDK provided by `next-firebase-auth-edge`.
-    // We need to use the client-side `createUserWithEmailAndPassword` and then get the ID token.
-    // This is a workaround. A better approach would be to use a custom endpoint or Firebase Functions.
-    // For this example, we'll assume the user is created on the client, and we just sign them in.
-    
-    // As we can't create a user directly on the server with this library,
-    // this will create a custom token and the client needs to sign in with it.
-    // A better approach is usually to handle user creation on the client-side.
-    // For simplicity, we are going to simulate user creation then sign-in.
-    // Let's call the REST API to create the user.
+    if (!validated.success) {
+      return { error: 'Los datos proporcionados no son válidos.' };
+    }
+
+    const { email, password, firstName, lastName } = validated.data;
     
     const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
         method: 'POST',
@@ -95,7 +89,7 @@ export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
     const data = await res.json();
 
     if (!res.ok) {
-        return { error: getFirebaseErrorMessage(data.error.message) };
+        return { error: getFirebaseErrorMessage(data?.error?.message) };
     }
 
     await setAuthCookies(data.idToken);
@@ -125,7 +119,7 @@ export async function handleSignIn(values: z.infer<typeof signInSchema>) {
     const data = await res.json();
 
     if (!res.ok) {
-        return { error: getFirebaseErrorMessage(data.error.message) };
+        return { error: getFirebaseErrorMessage(data?.error?.message) };
     }
 
     await setAuthCookies(data.idToken);
