@@ -54,7 +54,7 @@ function getFirebaseErrorMessage(errorCode: string): string {
             return 'El inicio de sesión con correo y contraseña no está habilitado.';
         case 'WEAK_PASSWORD':
         case 'auth/weak-password':
-            return 'La contraseña es demasiado débil.';
+            return 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
         case 'auth/user-disabled':
             return 'Este usuario ha sido deshabilitado.';
         case 'INVALID_LOGIN_CREDENTIALS':
@@ -102,7 +102,7 @@ export async function handleSignUp(values: z.infer<typeof signUpSchema>) {
     return { success: true };
   } catch (e: any) {
     console.error(e);
-    return { error: getFirebaseErrorMessage(e?.code) };
+    return { error: 'Ha ocurrido un error en el servidor. Por favor, inténtalo de nuevo.' };
   }
 }
 
@@ -133,7 +133,7 @@ export async function handleSignIn(values: z.infer<typeof signInSchema>) {
     return { success: true };
   } catch (e: any) {
      console.error(e);
-    return { error: getFirebaseErrorMessage(e?.code) };
+    return { error: 'Ha ocurrido un error en el servidor. Por favor, inténtalo de nuevo.' };
   }
 }
 
