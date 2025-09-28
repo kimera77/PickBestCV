@@ -6,13 +6,15 @@ import { cookies } from "next/headers";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+const serviceAccount = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+  privateKey: (process.env.FIREBASE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
+};
+
 const serverAuth = getFirebaseAuth({
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  serviceAccount: {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    privateKey: (process.env.FIREBASE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
-  },
+  serviceAccount,
 });
 
 const signUpSchema = z.object({
@@ -62,6 +64,8 @@ function getFirebaseErrorMessage(errorCode: string): string {
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
             return 'Correo electrónico o contraseña incorrectos.';
+        case 'CONFIGURATION_NOT_FOUND':
+            return 'La configuración de autenticación del servidor no se ha encontrado. Por favor, contacta con el administrador.';
         default:
             return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
     }
