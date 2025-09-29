@@ -19,9 +19,7 @@ const TemplateUpdateSchema = TemplateSchema.extend({
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   const user = await getCurrentUser();
   if (!user) {
-    // throw new Error("No autenticado");
-    console.warn("User not authenticated, cannot create job template.");
-    return;
+    throw new Error("No autenticado");
   }
 
   const validatedData = TemplateSchema.parse(data);
@@ -38,9 +36,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
     const user = await getCurrentUser();
     if (!user) {
-        // throw new Error("No autenticado");
-        console.warn("User not authenticated, cannot update job template.");
-        return;
+        throw new Error("No autenticado");
     }
 
     const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
@@ -55,9 +51,7 @@ export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchem
 export async function deleteJobTemplate(templateId: string) {
     const user = await getCurrentUser();
     if (!user) {
-        // throw new Error("No autenticado");
-        console.warn("User not authenticated, cannot delete job template.");
-        return;
+        throw new Error("No autenticado");
     }
 
     const templateRef = doc(firestore, "jobTemplates", templateId);
