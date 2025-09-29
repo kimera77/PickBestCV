@@ -8,12 +8,14 @@ type Language = {
 };
 
 export const languages: Language[] = [
-  { code: "es", name: "Español" },
   { code: "en", name: "English" },
+  { code: "es", name: "Español" },
   { code: "pt", name: "Português" },
   { code: "it", name: "Italiano" },
   { code: "fr", name: "Français" },
   { code: "de", name: "Deutsch" },
+  { code: "nl", name: "Nederlands" },
+  { code: "pl", name: "Polski" },
 ];
 
 type LanguageContextType = {
@@ -21,7 +23,7 @@ type LanguageContextType = {
   setLanguage: (language: Language) => void;
 };
 
-const defaultLanguage = languages[0]; // Español
+const defaultLanguage = languages[0]; // English
 
 export const LanguageContext = createContext<LanguageContextType>({
   language: defaultLanguage,

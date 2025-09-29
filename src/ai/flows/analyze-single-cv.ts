@@ -19,7 +19,7 @@ const AnalyzeSingleCvInputSchema = z.object({
     .describe(
       "A single CV as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  language: z.string().optional().describe('The language for the response (e.g., "es", "en"). Defaults to "es".'),
+  language: z.string().optional().describe('The language for the response (e.g., "en", "es"). Defaults to "en".'),
 });
 
 export type AnalyzeSingleCvInput = z.infer<
@@ -70,8 +70,8 @@ const analyzeSingleCvFlow = ai.defineFlow(
     outputSchema: AnalyzeSingleCvOutputSchema,
   },
   async input => {
-    // Default to Spanish if no language is provided
-    const languageToUse = input.language || 'es';
+    // Default to English if no language is provided
+    const languageToUse = input.language || 'en';
     const {output} = await analyzeSingleCvPrompt({...input, language: languageToUse});
     return output!;
   }
