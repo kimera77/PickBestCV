@@ -4,7 +4,7 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { serverAuth } from "./server-auth";
+import { getFirebaseAuth } from "next-firebase-auth-edge/lib/auth";
 
 
 const signUpSchema = z.object({
@@ -17,6 +17,15 @@ const signUpSchema = z.object({
 const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+});
+
+const serverAuth = getFirebaseAuth({
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  serviceAccount: {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  }
 });
 
 async function setAuthCookies(idToken: string) {
@@ -132,4 +141,18 @@ export async function handleSignOut() {
     cookies().delete("session");
     revalidatePath('/');
     redirect('/');
+}
+
+export async function getCurrentUser() {
+  const session = cookies().get("session")?.value;
+  if (!session) {
+    return null;
+  }
+
+  try {
+    const user = await serverAuth.verifySessionCookie(session, true);
+    return user;
+  } catch (error) {
+    return null;
+  }
 }

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/actions";
 
 export async function middleware(request: NextRequest) {
   const user = await getCurrentUser();

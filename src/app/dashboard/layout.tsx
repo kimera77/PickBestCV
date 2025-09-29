@@ -3,7 +3,7 @@ import Header from "@/components/dashboard/header";
 import { LanguageProvider } from "@/components/dashboard/language-provider";
 import { AuthProvider } from "@/lib/auth/auth-provider";
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/actions";
 
 export default async function DashboardLayout({ children }: PropsWithChildren) {
     const user = await getCurrentUser();

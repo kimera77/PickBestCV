@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { firestore } from "./firebase";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/actions";
 import { revalidatePath } from "next/cache";
 import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { JobTemplate } from "../types";
