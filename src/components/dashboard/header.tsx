@@ -25,7 +25,7 @@ export default function Header() {
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
           <Logo className="h-7 w-7 text-primary" />
-          <span className="font-bold text-xl tracking-tight">HireIQ</span>
+          <span className="font-bold text-xl tracking-tight">PickbestCV</span>
         </Link>
       </nav>
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">

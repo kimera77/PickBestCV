@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
 export const metadata: Metadata = {
-  title: 'HireIQ',
+  title: 'PickbestCV',
   description: 'Análisis de CV con IA para una contratación inteligente',
 };
 

@@ -9,10 +9,19 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
             className={cn("fill-current", props.className)}
             {...props}
         >
-            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Z" opacity="0.2"/>
-            <path d="M128,80v96" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
-            <path d="M172,96a24,24,0,0,0,0,48,8,8,0,0,1,8,8v16a8,8,0,0,1-8,8,24,24,0,0,0,0,48h0a24,24,0,0,0,23.4-28.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
-            <path d="M128,80a48,48,0,0,0-48,48v40a48,48,0,0,0,48,48" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"/>
+            <path
+                d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Z"
+                fillOpacity="0.5"
+            />
+            <path
+                d="M156,128a28,28,0,1,0-28,28,28,28,0,0,0,28-28Z"
+                fillOpacity="0.5"
+            />
+            <path d="M164,168H92a44,44,0,0,0-44,44v8a0,0,0,0,0,0,0H208a0,0,0,0,0,0,0v-8A44,44,0,0,0,164,168Z" fillOpacity="0.5" />
+            <path
+                d="M128,88a36,36,0,1,0,36,36,36,36,0,0,0-36-36Z"
+            />
+            <path d="M184,160H72a48,48,0,0,0-48,48v16a0,0,0,0,0,0,0H232a0,0,0,0,0,0,0V208A48,48,0,0,0,184,160Z" />
         </svg>
     )
 }

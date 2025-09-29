@@ -61,7 +61,7 @@ export default function LoginPage() {
       <CardHeader>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
           <Logo className="h-12 w-12 text-primary" />
-          <CardTitle className="text-3xl font-bold tracking-tighter">HireIQ</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tighter">PickbestCV</CardTitle>
           <CardDescription className="text-balance">
             Introduce tu correo electrónico para acceder a tu cuenta
           </CardDescription>
