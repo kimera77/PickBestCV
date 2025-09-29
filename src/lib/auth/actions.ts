@@ -4,8 +4,8 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getFirebaseAuth } from "next-firebase-auth-edge/lib/auth";
-
+import { getFirebaseAuth, type Tokens } from "next-firebase-auth-edge/lib/auth";
+import type { User } from "firebase/auth";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -29,16 +29,22 @@ const serverAuth = getFirebaseAuth({
 });
 
 async function setAuthCookies(idToken: string) {
-  const tokens = await serverAuth.getTokens(idToken);
-  const session = await serverAuth.createSession(tokens.token, {
-    // optional session claims
-  });
+  let tokens: Tokens;
+  try {
+     tokens = await serverAuth.getTokens(idToken);
+  } catch (e: any) {
+    console.error(e);
+    throw new Error('Failed to get tokens');
+  }
+
+  const session = await serverAuth.createSession(tokens.token, {});
 
   cookies().set("session", session, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     sameSite: "lax",
+    maxAge: 12 * 60 * 60 * 24 * 1000, // 12 days
   });
 }
 
@@ -143,7 +149,7 @@ export async function handleSignOut() {
     redirect('/');
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<User | null> {
   const session = cookies().get("session")?.value;
   if (!session) {
     return null;
@@ -153,6 +159,7 @@ export async function getCurrentUser() {
     const user = await serverAuth.verifySessionCookie(session, true);
     return user;
   } catch (error) {
+    console.error("Error verifying session cookie", error);
     return null;
   }
 }
