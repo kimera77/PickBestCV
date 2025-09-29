@@ -4,7 +4,7 @@ import { z } from "zod";
 import { firestore } from "./firebase";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { revalidatePath } from "next/cache";
-import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { JobTemplate } from "../types";
 
 const TemplateSchema = z.object({
@@ -27,7 +27,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   await addDoc(collection(firestore, "jobTemplates"), {
     ...validatedData,
     userId: user.uid,
-    createdAt: serverTimestamp(),
+    createdAt: new Date(),
   });
 
   revalidatePath("/dashboard");
