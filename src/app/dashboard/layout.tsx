@@ -7,9 +7,11 @@ import { getCurrentUser } from "@/lib/auth/actions";
 
 export default async function DashboardLayout({ children }: PropsWithChildren) {
     const user = await getCurrentUser();
+    /*
     if (!user) {
         redirect('/login');
     }
+    */
 
   return (
     <AuthProvider user={user}>
