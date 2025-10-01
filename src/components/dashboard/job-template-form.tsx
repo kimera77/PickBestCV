@@ -105,9 +105,10 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        fullText += textContent.items.map((item: any) => item.str).join(' ') + '\n\n';
+        fullText += textContent.items.map((item: any) => item.str).join(' ');
     }
-    return fullText;
+    // Clean up extra spaces and line breaks
+    return fullText.replace(/\s+/g, ' ').trim();
   }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,47 +172,9 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
             <PlusCircle className="h-6 w-6 text-primary"/>
             {isEditing ? 'Editar' : 'Crear'} plantilla de trabajo
           </DialogTitle>
-          <div className="flex items-center justify-between pr-6">
-            <DialogDescription>
-                {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo.'}
-            </DialogDescription>
-            <div className="flex gap-2">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="application/pdf"
-                    disabled={isLoading}
-                />
-                 <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleImportClick('local')}
-                    disabled={isLoading}
-                >
-                    {isExtracting && extractionMethod === 'local' ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Upload className="mr-2 h-4 w-4" />
-                    )}
-                    Importar PDF (Rápido)
-                </Button>
-                <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleImportClick('ai')}
-                    disabled={isLoading}
-                >
-                    {isExtracting && extractionMethod === 'ai' ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                       <WandSparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Importar PDF con IA
-                </Button>
-            </div>
-          </div>
+          <DialogDescription>
+              {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo.'}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -232,6 +195,44 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                 <Label htmlFor="description">
                 Descripción
                 </Label>
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="application/pdf"
+                    disabled={isLoading}
+                />
+                 <div className="flex flex-col gap-2 items-end justify-end">
+                    <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleImportClick('local')}
+                        disabled={isLoading}
+                        className="w-full"
+                    >
+                        {isExtracting && extractionMethod === 'local' ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Upload className="mr-2 h-4 w-4" />
+                        )}
+                        Importar (Rápido)
+                    </Button>
+                    <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleImportClick('ai')}
+                        disabled={isLoading}
+                        className="w-full"
+                    >
+                        {isExtracting && extractionMethod === 'ai' ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                        <WandSparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Importar (IA)
+                    </Button>
+                </div>
             </div>
             <Textarea
               id="description"
