@@ -16,7 +16,7 @@ import LanguageSwitcher from "./language-switcher";
 import { handleSignOut } from "@/lib/auth/actions";
 import { UserAvatar } from "./user-avatar";
 import { Logo } from "@/components/logo";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 
 export default function Header() {
@@ -38,6 +38,10 @@ export default function Header() {
             </Button>
             </SheetTrigger>
             <SheetContent side="left" className="sm:max-w-xs">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Menú principal</SheetTitle>
+              <SheetDescription>Navegación principal del sitio</SheetDescription>
+            </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
                 <Link
                 href="#"
