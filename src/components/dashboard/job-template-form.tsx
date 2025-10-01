@@ -81,7 +81,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar' : 'Crear'} plantilla de trabajo</DialogTitle>
           <DialogDescription>
@@ -109,7 +109,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3 min-h-[120px]"
+              className="col-span-3 min-h-[200px]"
               placeholder="Describe el puesto, las responsabilidades y los requisitos."
             />
           </div>
