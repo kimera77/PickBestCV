@@ -25,6 +25,8 @@ export default function CvUpload({ name, files, setFiles }: CvUploadProps) {
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
     }
   });
 
@@ -59,7 +61,7 @@ export default function CvUpload({ name, files, setFiles }: CvUploadProps) {
         <p className="mt-4 text-lg text-center text-muted-foreground">
           {isDragActive ? 'Suelta los archivos aquí...' : 'Arrastra y suelta los CVs aquí, o haz clic para seleccionar los archivos'}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">(Solo documentos PDF)</p>
+        <p className="text-sm text-muted-foreground mt-1">(Archivos PDF, JPG o PNG)</p>
       </div>
 
       {files.length > 0 && (

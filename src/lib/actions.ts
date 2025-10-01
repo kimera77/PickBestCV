@@ -8,8 +8,8 @@ import type { CandidateMatch } from "./types";
 const CvFileSchema = z
   .instanceof(File)
   .refine(
-    (file) => file.type === "application/pdf",
-    "Solo se permiten documentos PDF."
+    (file) => ["application/pdf", "image/jpeg", "image/png"].includes(file.type),
+    "Solo se permiten documentos PDF o imágenes (JPG, PNG)."
   )
   .refine((file) => file.size > 0, "El archivo del CV no puede estar vacío.");
 
