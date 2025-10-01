@@ -102,13 +102,34 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
     let fullText = '';
+
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        fullText += textContent.items.map((item: any) => item.str).join(' ') + '\n';
+        
+        // Sort items by their vertical and then horizontal position
+        const items = textContent.items.sort((a: any, b: any) => {
+            if (a.transform[5] > b.transform[5]) return -1;
+            if (a.transform[5] < b.transform[5]) return 1;
+            if (a.transform[4] < b.transform[4]) return -1;
+            if (a.transform[4] > b.transform[4]) return 1;
+            return 0;
+        });
+
+        let lastY = -1;
+        for (const item of items) {
+            const currentY = item.transform[5];
+            if (lastY !== -1 && Math.abs(currentY - lastY) > item.height * 0.5) {
+                fullText += '\n';
+            }
+            fullText += item.str + ' ';
+            lastY = currentY;
+        }
+        fullText += '\n\n'; // Add space between pages
     }
+    
     // Clean up extra spaces and line breaks
-    return fullText.replace(/  +/g, ' ').replace(/\n /g, '\n').trim();
+    return fullText.replace(/ +/g, ' ').replace(/ \n/g, '\n').trim();
   }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
