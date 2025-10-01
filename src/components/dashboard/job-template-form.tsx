@@ -238,28 +238,31 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         size="sm"
                         onClick={() => handleImportClick('local')}
                         disabled={isLoading}
-                        className="w-full text-xs"
+                        className="w-full text-xs justify-center"
                     >
                         {isExtracting && extractionMethod === 'local' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
                             <Upload className="mr-2 h-4 w-4" />
                         )}
-                        Importar PDF
+                        PDF
                     </Button>
                     <Button 
                         variant="outline"
                         size="sm"
                         onClick={() => handleImportClick('ai')}
                         disabled={isLoading}
-                        className="w-full text-xs"
+                        className="w-full text-xs justify-center"
                     >
                         {isExtracting && extractionMethod === 'ai' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                        <WandSparkles className="mr-2 h-4 w-4" />
+                        <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            <WandSparkles className="mr-2 h-4 w-4" />
+                        </>
                         )}
-                        Importar PDF con IA
+                        PDF
                     </Button>
                 </div>
             </div>
