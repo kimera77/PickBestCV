@@ -9,7 +9,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import { LanguageContext, languages } from "./language-provider";
 
 export default function LanguageSwitcher() {
@@ -36,10 +36,8 @@ export default function LanguageSwitcher() {
             <DropdownMenuRadioItem
                 key={lang.code}
                 value={lang.code}
-                className="flex items-center justify-between"
             >
                 <span>{lang.name}</span>
-                {language.code === lang.code && <Check className="h-4 w-4" />}
             </DropdownMenuRadioItem>
             ))}
         </DropdownMenuRadioGroup>
