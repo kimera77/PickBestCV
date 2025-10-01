@@ -10,13 +10,13 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
             {...props}
         >
             <path
+                d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24M88 192V64h56a40 40 0 0 1 0 80H88v48Z"
                 fill="hsl(var(--primary))"
-                d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m-8 168a72 72 0 0 1-72-72h48a24 24 0 0 0 24 24Zm0-40a24 24 0 0 0 0-48h48a24 24 0 1 0 0-48h-48a72 72 0 0 1 0 144Z"
-            ></path>
+            />
             <path
+                d="m144 104a40 40 0 0 0 0-80H88v80h56Z"
                 fill="hsl(var(--primary-foreground))"
-                d="M120 80h48a24 24 0 1 0 0-48h-48a72 72 0 0 1 0 144 72 72 0 0 1-72-72h48a24 24 0 0 0 24-24Zm0 48a24 24 0 0 0 0-48Z"
-            ></path>
+            />
         </svg>
     )
 }
