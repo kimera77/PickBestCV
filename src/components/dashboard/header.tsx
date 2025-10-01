@@ -33,10 +33,10 @@ export default function Header() {
         <LanguageSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full">
+            <div className="cursor-pointer">
               <UserAvatar />
               <span className="sr-only">Toggle user menu</span>
-            </Button>
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
