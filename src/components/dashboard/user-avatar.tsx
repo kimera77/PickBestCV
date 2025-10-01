@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CircleUser } from "lucide-react";
 
 const getInitials = (name: string | null | undefined) => {
   if (!name) return "";
@@ -19,7 +20,9 @@ export function UserAvatar() {
   return (
     <Avatar className="h-8 w-8">
       <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? ''} />
-      <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+      <AvatarFallback>
+        <CircleUser className="h-5 w-5" />
+      </AvatarFallback>
     </Avatar>
   );
 }
