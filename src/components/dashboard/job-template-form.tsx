@@ -118,11 +118,19 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
 
         let lastY = -1;
         for (const item of items) {
+            if (!('str' in item)) continue;
+            
             const currentY = item.transform[5];
-            if (lastY !== -1 && Math.abs(currentY - lastY) > item.height * 0.5) {
-                fullText += '\n';
+            if (lastY !== -1) {
+                const yDiff = Math.abs(currentY - lastY);
+                if (yDiff > item.height * 2) { // Large gap -> new section
+                    fullText += '\n\n';
+                } else if (yDiff > item.height * 0.5) { // Medium gap -> new line
+                    fullText += '\n';
+                }
             }
-            fullText += item.str + ' ';
+            
+            fullText += item.str.trim() ? item.str + ' ' : '';
             lastY = currentY;
         }
         fullText += '\n\n'; // Add space between pages
