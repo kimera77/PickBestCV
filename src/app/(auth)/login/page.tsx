@@ -27,15 +27,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { handleSignIn } from "@/lib/auth/actions";
-import Image from "next/image";
+import { Logo } from "@/components/logo";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
 });
-
-// The user's logo as a data URI
-export const userLogo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAy0lEQVR4nO3bSwoCQRRF0VvUa/QoHkMv0kP0Gkp76Cg9Sp9j4ihC2V1W2V3Dvy88C0ISiDiJgQAIEIAABAgQgAEEIEAAAgQgQAACEIAAAQhAgAAEIAABCBCAAAQgwE9g3e8i8JOCs4JzG/f7l8A9vN59D/4U9xfwD9i+f/79/v0/AF+FrsD75e3fV35/gYAAgQAIEIAAAQhAgAAEIEAAAgQgQAACEIAAAQhAgAAEIAABCBCAAAQIEIAAAQhAgAAEILB9B+83C+0S3oJxAAAAAElFTkSuQmCC";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -63,7 +60,7 @@ export default function LoginPage() {
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
-          <Image src={userLogo} alt="PickbestCV Logo" width={48} height={48} className="h-12 w-12" />
+          <Logo className="h-12 w-12" />
           <CardTitle className="text-3xl font-bold tracking-tighter">PickbestCV</CardTitle>
           <CardDescription className="text-balance">
             Introduce tu correo electrónico para acceder a tu cuenta

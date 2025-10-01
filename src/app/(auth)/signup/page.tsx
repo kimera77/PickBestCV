@@ -26,8 +26,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
 import { handleSignUp } from "@/lib/auth/actions";
-import Image from "next/image";
-import { userLogo } from "../login/page";
+import { Logo } from "@/components/logo";
 
 
 const formSchema = z.object({
@@ -65,7 +64,7 @@ export default function SignupPage() {
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
-            <Image src={userLogo} alt="PickbestCV Logo" width={48} height={48} className="h-12 w-12" />
+            <Logo className="h-12 w-12" />
             <CardTitle className="text-3xl font-bold tracking-tighter">PickbestCV</CardTitle>
             <CardDescription className="text-balance">
               Introduce tus datos para crear una cuenta y empezar a analizar CVs
