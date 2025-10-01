@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
 import { extractTextFromPdfAction } from "@/lib/actions";
 import * as pdfjsLib from 'pdfjs-dist';
+import { DialogTrigger } from "@/components/ui/dialog";
 
 // Configure the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
