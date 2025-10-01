@@ -14,8 +14,7 @@ import {
 import LanguageSwitcher from "./language-switcher";
 import { handleSignOut } from "@/lib/auth/actions";
 import { UserAvatar } from "./user-avatar";
-import Image from "next/image";
-import { userLogo } from "@/app/(auth)/login/page";
+import { Logo } from "@/components/logo";
 
 
 export default function Header() {
@@ -26,7 +25,7 @@ export default function Header() {
           href="#"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
-          <Image src={userLogo} alt="PickbestCV Logo" width={28} height={28} className="h-7 w-7" />
+          <Logo className="h-7 w-7" />
           <span className="font-bold text-xl tracking-tight">PickbestCV</span>
         </Link>
       </nav>
