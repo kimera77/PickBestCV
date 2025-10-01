@@ -158,7 +158,7 @@ export async function getCurrentUser(): Promise<User | null> {
     uid: 'test-user-id',
     email: 'test@example.com',
     displayName: 'Usuario de Prueba',
-    photoURL: 'https://i.pravatar.cc/150?u=test-user',
+    photoURL: null,
     emailVerified: true,
     isAnonymous: false,
     tenantId: null,
