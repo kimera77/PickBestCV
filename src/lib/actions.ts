@@ -1,6 +1,7 @@
 "use server";
 
 import { analyzeSingleCv } from "@/ai/flows/analyze-single-cv";
+import { extractTextFromPdf } from "@/ai/flows/extract-text-from-pdf";
 import { z } from "zod";
 import type { CandidateMatch } from "./types";
 
@@ -90,5 +91,33 @@ export async function performCvAnalysis(
       },
       analysis: null,
     };
+  }
+}
+
+const PdfFileSchema = z
+  .instanceof(File)
+  .refine(
+    (file) => file.type === "application/pdf",
+    "Solo se permiten archivos PDF."
+  )
+  .refine((file) => file.size > 0, "El archivo no puede estar vacío.");
+
+export async function extractTextFromPdfAction(
+  formData: FormData
+): Promise<{ text?: string; error?: string }> {
+  const file = formData.get("pdf");
+
+  const validatedFile = PdfFileSchema.safeParse(file);
+  if (!validatedFile.success) {
+    return { error: validatedFile.error.flatten().fieldErrors.root?.join(", ") || "Archivo no válido." };
+  }
+
+  try {
+    const pdfDataUri = await fileToDataURI(validatedFile.data);
+    const result = await extractTextFromPdf({ pdf: pdfDataUri });
+    return { text: result.extractedText };
+  } catch (e) {
+    console.error(e);
+    return { error: "No se pudo extraer el texto del PDF." };
   }
 }

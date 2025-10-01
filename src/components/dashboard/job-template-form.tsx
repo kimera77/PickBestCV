@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,9 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
-import { PlusCircle, Loader2, Save } from "lucide-react";
+import { PlusCircle, Loader2, Save, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
+import { extractTextFromPdfAction } from "@/lib/actions";
 
 type JobTemplateFormProps = {
   children?: React.ReactNode;
@@ -36,7 +37,9 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!templateToEdit;
 
@@ -78,6 +81,54 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     }
   };
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        toast({
+            variant: "destructive",
+            title: "Archivo no válido",
+            description: "Por favor, selecciona un archivo PDF.",
+        });
+        return;
+    }
+    
+    setIsExtracting(true);
+    const formData = new FormData();
+    formData.append('pdf', file);
+
+    try {
+        const result = await extractTextFromPdfAction(formData);
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        setDescription(result.text || "");
+        toast({
+            title: "Texto extraído",
+            description: "La descripción del trabajo se ha rellenado con el contenido del PDF.",
+        });
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Error de extracción",
+            description: "No se pudo extraer el texto del PDF. Por favor, inténtalo de nuevo.",
+        });
+    } finally {
+        setIsExtracting(false);
+        // Reset file input
+        if(fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
@@ -99,26 +150,52 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
               onChange={(e) => setTitle(e.target.value)}
               className="col-span-3"
               placeholder="Ej: Desarrollador Frontend Senior"
+              disabled={isExtracting}
             />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right pt-2">
-              Descripción
-            </Label>
+            <div className="text-right space-y-2">
+                <Label htmlFor="description" className="pt-2">
+                Descripción
+                </Label>
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="application/pdf"
+                    disabled={isExtracting}
+                />
+                <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleImportClick}
+                    disabled={isExtracting}
+                    className="w-full text-xs"
+                >
+                    {isExtracting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Upload className="mr-2 h-4 w-4" />
+                    )}
+                    Importar PDF
+                </Button>
+            </div>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3 min-h-[200px]"
-              placeholder="Describe el puesto, las responsabilidades y los requisitos."
+              className="col-span-3 min-h-[350px]"
+              placeholder="Describe el puesto, las responsabilidades y los requisitos, o importa un PDF."
+              disabled={isExtracting}
             />
           </div>
         </div>
         <DialogFooter>
             <DialogClose asChild>
-                <Button variant="outline">Cancelar</Button>
+                <Button variant="outline" disabled={isSaving || isExtracting}>Cancelar</Button>
             </DialogClose>
-          <Button onClick={handleSave} disabled={!title || !description || isSaving}>
+          <Button onClick={handleSave} disabled={!title || !description || isSaving || isExtracting}>
             {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : isEditing ? (
