@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,6 @@ import { useToast } from "@/hooks/use-toast";
 import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
 import { extractTextFromPdfAction } from "@/lib/actions";
 import * as pdfjsLib from 'pdfjs-dist';
-import { DialogTrigger } from "@/components/ui/dialog";
 
 // Configure the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -209,7 +209,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         size="sm"
                         onClick={() => handleImportClick('local')}
                         disabled={isLoading}
-                        className="w-full"
+                        className="w-full text-xs"
                     >
                         {isExtracting && extractionMethod === 'local' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -223,7 +223,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         size="sm"
                         onClick={() => handleImportClick('ai')}
                         disabled={isLoading}
-                        className="w-full"
+                        className="w-full text-xs"
                     >
                         {isExtracting && extractionMethod === 'ai' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
