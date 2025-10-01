@@ -8,10 +8,10 @@ export function UserAvatar() {
   const { user } = useAuth();
 
   return (
-    <Avatar className="h-9 w-9">
+    <Avatar>
       <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? ''} />
       <AvatarFallback>
-        <CircleUser className="h-9 w-9 opacity-75" />
+        <CircleUser className="h-5 w-5" />
       </AvatarFallback>
     </Avatar>
   );
