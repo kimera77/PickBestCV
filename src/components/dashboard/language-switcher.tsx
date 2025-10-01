@@ -9,7 +9,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Languages } from "lucide-react";
 import { LanguageContext, languages } from "./language-provider";
 
 export default function LanguageSwitcher() {
@@ -26,7 +25,6 @@ export default function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2 font-semibold">
-           <Languages className="h-4 w-4 text-muted-foreground" />
           <span>{language.code.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
