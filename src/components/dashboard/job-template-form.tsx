@@ -9,17 +9,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
-import { PlusCircle, Loader2, Save, Upload } from "lucide-react";
+import { PlusCircle, Loader2, Save, Upload, WandSparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
 import { extractTextFromPdfAction } from "@/lib/actions";
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure the worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
 
 type JobTemplateFormProps = {
   children?: React.ReactNode;
@@ -38,6 +42,8 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionMethod, setExtractionMethod] = useState<'ai' | 'local' | null>(null);
+
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,9 +87,31 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     }
   };
 
+  const extractTextWithAI = async (file: File) => {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    const result = await extractTextFromPdfAction(formData);
+    if (result.error) {
+        throw new Error(result.error);
+    }
+    return result.text || "";
+  }
+
+  const extractTextLocally = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += textContent.items.map((item: any) => item.str).join(' ') + '\n\n';
+    }
+    return fullText;
+  }
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !extractionMethod) return;
 
     if (file.type !== 'application/pdf') {
         toast({
@@ -95,15 +123,16 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     }
     
     setIsExtracting(true);
-    const formData = new FormData();
-    formData.append('pdf', file);
 
     try {
-        const result = await extractTextFromPdfAction(formData);
-        if (result.error) {
-            throw new Error(result.error);
+        let extractedText = "";
+        if (extractionMethod === 'ai') {
+             extractedText = await extractTextWithAI(file);
+        } else {
+             extractedText = await extractTextLocally(file);
         }
-        setDescription(result.text || "");
+       
+        setDescription(extractedText);
         toast({
             title: "Texto extraído",
             description: "La descripción del trabajo se ha rellenado con el contenido del PDF.",
@@ -113,20 +142,23 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
         toast({
             variant: "destructive",
             title: "Error de extracción",
-            description: "No se pudo extraer el texto del PDF. Por favor, inténtalo de nuevo.",
+            description: `No se pudo extraer el texto del PDF. ${error instanceof Error ? error.message : ''}`,
         });
     } finally {
         setIsExtracting(false);
-        // Reset file input
+        setExtractionMethod(null);
         if(fileInputRef.current) {
             fileInputRef.current.value = "";
         }
     }
   };
 
-  const handleImportClick = () => {
+  const handleImportClick = (method: 'ai' | 'local') => {
+    setExtractionMethod(method);
     fileInputRef.current?.click();
   };
+
+  const isLoading = isSaving || isExtracting;
 
 
   return (
@@ -134,10 +166,51 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar' : 'Crear'} plantilla de trabajo</DialogTitle>
-          <DialogDescription>
-             {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo. Se utilizará para el análisis de CV.'}
-          </DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <PlusCircle className="h-6 w-6 text-primary"/>
+            {isEditing ? 'Editar' : 'Crear'} plantilla de trabajo
+          </DialogTitle>
+          <div className="flex items-center justify-between pr-6">
+            <DialogDescription>
+                {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo.'}
+            </DialogDescription>
+            <div className="flex gap-2">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="application/pdf"
+                    disabled={isLoading}
+                />
+                 <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleImportClick('local')}
+                    disabled={isLoading}
+                >
+                    {isExtracting && extractionMethod === 'local' ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Upload className="mr-2 h-4 w-4" />
+                    )}
+                    Importar PDF (Rápido)
+                </Button>
+                <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleImportClick('ai')}
+                    disabled={isLoading}
+                >
+                    {isExtracting && extractionMethod === 'ai' ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                       <WandSparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Importar PDF con IA
+                </Button>
+            </div>
+          </div>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -149,37 +222,15 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="col-span-3"
-              placeholder="Ej: Desarrollador Frontend Senior"
-              disabled={isExtracting}
+              placeholder="Ej: Desarrollador WEB Frontend"
+              disabled={isLoading}
             />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
-            <div className="text-right space-y-2">
-                <Label htmlFor="description" className="pt-2">
+            <div className="text-right space-y-2 pt-2">
+                <Label htmlFor="description">
                 Descripción
                 </Label>
-                 <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="application/pdf"
-                    disabled={isExtracting}
-                />
-                <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleImportClick}
-                    disabled={isExtracting}
-                    className="w-full text-xs"
-                >
-                    {isExtracting ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Upload className="mr-2 h-4 w-4" />
-                    )}
-                    Importar PDF
-                </Button>
             </div>
             <Textarea
               id="description"
@@ -187,15 +238,15 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3 min-h-[350px]"
               placeholder="Describe el puesto, las responsabilidades y los requisitos, o importa un PDF."
-              disabled={isExtracting}
+              disabled={isLoading}
             />
           </div>
         </div>
         <DialogFooter>
             <DialogClose asChild>
-                <Button variant="outline" disabled={isSaving || isExtracting}>Cancelar</Button>
+                <Button variant="outline" disabled={isLoading}>Cancelar</Button>
             </DialogClose>
-          <Button onClick={handleSave} disabled={!title || !description || isSaving || isExtracting}>
+          <Button onClick={handleSave} disabled={!title || !description || isLoading}>
             {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : isEditing ? (
