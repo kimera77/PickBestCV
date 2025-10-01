@@ -105,10 +105,10 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        fullText += textContent.items.map((item: any) => item.str).join(' ');
+        fullText += textContent.items.map((item: any) => item.str).join(' ') + '\n';
     }
     // Clean up extra spaces and line breaks
-    return fullText.replace(/\s+/g, ' ').trim();
+    return fullText.replace(/  +/g, ' ').replace(/\n /g, '\n').trim();
   }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,7 +166,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary"/>
@@ -216,7 +216,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         ) : (
                             <Upload className="mr-2 h-4 w-4" />
                         )}
-                        Importar (Rápido)
+                        Importar PDF
                     </Button>
                     <Button 
                         variant="outline"
@@ -230,7 +230,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         ) : (
                         <WandSparkles className="mr-2 h-4 w-4" />
                         )}
-                        Importar (IA)
+                        Importar PDF con IA
                     </Button>
                 </div>
             </div>
