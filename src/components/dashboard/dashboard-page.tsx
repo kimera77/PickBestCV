@@ -13,7 +13,7 @@ type DashboardPageClientProps = {
 
 export default function DashboardPageClient({ initialTemplates }: DashboardPageClientProps) {
   const [templates, setTemplates] = useState<JobTemplate[]>(initialTemplates);
-  const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(templates[0] || null);
 
   const refreshTemplates = useCallback(async () => {
     const freshTemplates = await getJobTemplates();
@@ -22,14 +22,16 @@ export default function DashboardPageClient({ initialTemplates }: DashboardPageC
   
   return (
     <LanguageProvider>
-        <div className="grid flex-1 items-start gap-4 lg:grid-cols-3 xl:grid-cols-3">
-            <JobTemplates 
-                templates={templates}
-                selectedTemplate={selectedTemplate}
-                setSelectedTemplate={setSelectedTemplate}
-                onTemplateUpdate={refreshTemplates}
-            />
-            <div className="lg:col-span-2 xl:col-span-2">
+        <div className="flex flex-col lg:flex-row flex-1 items-start gap-4">
+            <div className="w-full lg:w-1/3 xl:w-1/3">
+                <JobTemplates 
+                    templates={templates}
+                    selectedTemplate={selectedTemplate}
+                    setSelectedTemplate={setSelectedTemplate}
+                    onTemplateUpdate={refreshTemplates}
+                />
+            </div>
+            <div className="w-full lg:w-2/3 xl:w-2/3">
                 <CvAnalysis selectedTemplate={selectedTemplate} />
             </div>
         </div>
