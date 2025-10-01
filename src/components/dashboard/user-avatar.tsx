@@ -4,16 +4,6 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CircleUser } from "lucide-react";
 
-const getInitials = (name: string | null | undefined) => {
-  if (!name) return "";
-  const names = name.split(' ');
-  let initials = names[0].substring(0, 1).toUpperCase();
-  if (names.length > 1) {
-    initials += names[names.length - 1].substring(0, 1).toUpperCase();
-  }
-  return initials;
-};
-
 export function UserAvatar() {
   const { user } = useAuth();
 
@@ -21,7 +11,7 @@ export function UserAvatar() {
     <Avatar className="h-8 w-8">
       <AvatarImage src={user?.photoURL ?? ''} alt={user?.displayName ?? ''} />
       <AvatarFallback>
-        <CircleUser className="h-5 w-5" />
+        <CircleUser className="h-8 w-8 opacity-80" />
       </AvatarFallback>
     </Avatar>
   );
