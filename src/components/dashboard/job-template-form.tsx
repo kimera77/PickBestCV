@@ -232,7 +232,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                     accept="application/pdf"
                     disabled={isLoading}
                 />
-                 <div className="flex flex-col gap-2 items-end justify-end">
+                 <div className="flex flex-col gap-2 items-end justify-end pt-2">
                     <Button 
                         variant="outline"
                         size="sm"
