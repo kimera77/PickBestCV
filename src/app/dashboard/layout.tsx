@@ -4,6 +4,7 @@ import { LanguageProvider } from "@/components/dashboard/language-provider";
 import { AuthProvider } from "@/lib/auth/auth-provider";
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from "@/lib/auth/actions";
+import ContactFooter from "@/components/dashboard/contact-footer";
 
 export default async function DashboardLayout({ children }: PropsWithChildren) {
     const user = await getCurrentUser();
@@ -21,6 +22,7 @@ export default async function DashboardLayout({ children }: PropsWithChildren) {
           <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
             {children}
           </main>
+          <ContactFooter />
         </div>
       </LanguageProvider>
     </AuthProvider>
