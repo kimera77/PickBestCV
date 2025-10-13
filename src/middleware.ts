@@ -3,25 +3,26 @@ import { getCurrentUser } from "@/lib/auth/actions";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const user = await getCurrentUser();
+  const publicRoutes = ["/login", "/signup"];
 
-  // Always redirect from the root to the dashboard
+  // Always redirect from the root to the login page if not authenticated, or dashboard if authenticated
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
   }
   
-  // You can re-enable auth checks later by uncommenting the code below.
-  /*
-  const user = await getCurrentUser();
-  const publicRoutes = ["/", "/login", "/signup"];
-
-  if (user && (pathname === '/login' || pathname === '/signup')) {
+  if (user && publicRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!user && !publicRoutes.includes(pathname) && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!user && !publicRoutes.includes(pathname) && !pathname.startsWith('/api')) {
+     if (pathname.startsWith('/dashboard')) {
+        return NextResponse.redirect(new URL("/login", request.url));
+     }
   }
-  */
 
   return NextResponse.next();
 }

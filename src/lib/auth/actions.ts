@@ -148,25 +148,10 @@ export async function handleSignIn(values: z.infer<typeof signInSchema>) {
 export async function handleSignOut() {
     cookies().delete("session");
     revalidatePath('/');
-    redirect('/');
+    redirect('/login');
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  // NOTE: This is a mock user for development purposes.
-  // The real authentication logic is commented out below.
-  return {
-    uid: 'test-user-id',
-    email: 'test@example.com',
-    displayName: 'Usuario de Prueba',
-    photoURL: null,
-    emailVerified: true,
-    isAnonymous: false,
-    tenantId: null,
-    providerData: [],
-    metadata: {},
-  } as User;
-
-  /*
   const session = cookies().get("session")?.value;
   if (!session) {
     return null;
@@ -179,5 +164,4 @@ export async function getCurrentUser(): Promise<User | null> {
     console.error("Error verifying session cookie", error);
     return null;
   }
-  */
 }

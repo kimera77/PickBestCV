@@ -1,143 +1,114 @@
 /**
- * @file Firestore Security Rules for CV Match Pro
- * @corePhilosophy This ruleset enforces a strict user-ownership model for all data. Each user has full control over their own data (profiles, CVs, job templates, and analysis results).
- * @dataStructure All data is nested under /users/{userId}, creating a clear ownership hierarchy.
- * @keySecurityDecisions User listing is disallowed. Write access is strictly limited to the owning user, enforced via the `isOwner()` function. Data consistency between the path and document content is enforced on create and update operations.
+ * @file Firebase Security Rules for CV Match Pro.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model.  Each user can only access their own data.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, ensuring clear ownership and access control.
+ *
+ * Key Security Decisions:
+ * - User listing is implicitly disallowed, as there are no rules granting it.
+ * - All write operations are restricted to the owner of the data.
+ *
+ * Denormalization for Authorization:
+ * The `userId` is present on all subcollection documents. This allows for fast, simple rules like `isOwner(resource.data.userId)` without extra reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profiles. Only the user themselves can read or write their profile.
+     * @description Enforces access control for user profiles. Only the user themselves can read or write their profile.
      * @path /users/{userId}
-     * @allow (create) User with ID 'user123' creates their profile document.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.id == 'user123'
-     * @allow (get) User with ID 'user123' reads their profile document.
-     *   request.auth.uid == 'user123'
-     * @deny (create) User with ID 'user456' tries to create a profile for user 'user123'.
-     *   request.auth.uid == 'user456'
-     *   request.resource.data.id == 'user123'
-     * @deny (update) User with ID 'user456' tries to update user 'user123's profile.
-     *   request.auth.uid == 'user456'
+     * @allow (get, update, delete) User 'user123' can read/write their own profile.
+     * @allow (create) User 'user123' can create their own profile if request.auth.uid matches the user id in the path
+     * @deny (get, update, delete) User 'user456' cannot read/write User 'user123' profile.
      * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      // Helper function to check if the authenticated user is the owner of the document.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
-      // Helper function to check if the authenticated user is the owner of an existing document.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false; // Listing users is not permitted.
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Manages job position templates created by users.  Only the creating user can access their templates.
+     * @description Enforces access control for job position templates. Only the user who created the template can read or write it.
      * @path /users/{userId}/jobPositionTemplates/{jobPositionTemplateId}
-     * @allow (create) User 'user123' creates a job template under their profile.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.userId == 'user123'
-     * @allow (get) User 'user123' reads a job template under their profile.
-     *   request.auth.uid == 'user123'
-     * @deny (create) User 'user456' tries to create a job template under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     *   request.resource.data.userId == 'user123'
-     * @deny (update) User 'user456' tries to update a job template under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete) User 'user123' can manage their own job position templates.
+     * @deny (create, get, update, delete) User 'user456' cannot manage User 'user123' job position templates.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
-      // Helper function to check if the authenticated user is the owner of the document.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
-      // Helper function to check if the authenticated user is the owner of an existing document.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && isOwner(userId) && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Manages CVs uploaded by users. Only the uploading user can access their CVs.
+     * @description Enforces access control for CVs. Only the user who uploaded the CV can read or write it.
      * @path /users/{userId}/cvs/{cvId}
-     * @allow (create) User 'user123' uploads a CV under their profile.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.userId == 'user123'
-     * @allow (get) User 'user123' reads a CV under their profile.
-     *   request.auth.uid == 'user123'
-     * @deny (create) User 'user456' tries to upload a CV under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     *   request.resource.data.userId == 'user123'
-     * @deny (update) User 'user456' tries to update a CV under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete) User 'user123' can manage their own CVs.
+     * @deny (create, get, update, delete) User 'user456' cannot manage User 'user123' CVs.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/cvs/{cvId} {
-      // Helper function to check if the authenticated user is the owner of the document.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
-      // Helper function to check if the authenticated user is the owner of an existing document.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && isOwner(userId) && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Manages analysis results for CVs and job position templates. Only the owner of both the CV and the template can access the results.
+     * @description Enforces access control for analysis results. Only the user who owns the analysis result can read or write it.
      * @path /users/{userId}/analysisResults/{analysisResultId}
-     * @allow (create) User 'user123' creates an analysis result under their profile.
-     *   request.auth.uid == 'user123'
-     *   request.resource.data.jobPositionTemplateId references a template also owned by user123 AND request.resource.data.cvId references a CV also owned by user123.  (This rule does not enforce the cross-document ownership, but assumes the backend will handle the data consistency).
-     * @allow (get) User 'user123' reads an analysis result under their profile.
-     *   request.auth.uid == 'user123'
-     * @deny (create) User 'user456' tries to create an analysis result under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     *   request.resource.data.jobPositionTemplateId references a template owned by user123.
-     * @deny (update) User 'user456' tries to update an analysis result under user 'user123's profile.
-     *   request.auth.uid == 'user456'
-     * @principle Enforces document ownership for all operations.
+     * @allow (create, get, update, delete) User 'user123' can manage their own analysis results.
+     * @deny (create, get, update, delete) User 'user456' cannot manage User 'user123' analysis results.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/analysisResults/{analysisResultId} {
-      // Helper function to check if the authenticated user is the owner of the document.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
       function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
-      // Helper function to check if the authenticated user is the owner of an existing document.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId); // No validation of jobPositionTemplateId or cvId references for prototyping flexibility.  Backend must enforce consistency.
-      allow update: if isExistingOwner(userId); // No validation of jobPositionTemplateId or cvId references for prototyping flexibility. Backend must enforce consistency.
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && isOwner(userId) && resource.data.userId == request.auth.uid;
     }
   }
 }
