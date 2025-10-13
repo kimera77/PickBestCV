@@ -25,7 +25,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   }
 
   const validatedData = TemplateSchema.parse(data);
-  const collectionRef = collection(firestore, `users/${user.uid}/jobTemplates`);
+  const collectionRef = collection(firestore, "users", user.uid, "jobTemplates");
 
   addDoc(collectionRef, {
     ...validatedData,
@@ -53,7 +53,7 @@ export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchem
 
     const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
 
-    const templateRef = doc(firestore, `users/${user.uid}/jobTemplates`, id);
+    const templateRef = doc(firestore, "users", user.uid, "jobTemplates", id);
     
     // When updating, we should not include the userId, as it's immutable.
     const updateData = { ...validatedData };
@@ -79,7 +79,7 @@ export async function deleteJobTemplate(templateId: string) {
         throw new Error("No autenticado");
     }
 
-    const templateRef = doc(firestore, `users/${user.uid}/jobTemplates`, templateId);
+    const templateRef = doc(firestore, "users", user.uid, "jobTemplates", templateId);
     
     deleteDoc(templateRef)
     .catch(error => {
@@ -96,13 +96,12 @@ export async function deleteJobTemplate(templateId: string) {
 }
 
 
-export async function getJobTemplates(): Promise<JobTemplate[]> {
-    const user = await getCurrentUser();
-    if (!user) {
+export async function getJobTemplates(userId: string): Promise<JobTemplate[]> {
+    if (!userId) {
         return [];
     }
 
-    const collectionRef = collection(firestore, `users/${user.uid}/jobTemplates`);
+    const collectionRef = collection(firestore, `users/${userId}/jobTemplates`);
     const q = query(collectionRef);
     
     try {
@@ -113,16 +112,9 @@ export async function getJobTemplates(): Promise<JobTemplate[]> {
         });
         return templates;
     } catch (error) {
-         errorEmitter.emit(
-            'permission-error',
-            new FirestorePermissionError({
-                path: collectionRef.path,
-                operation: 'list',
-            })
-        );
-        // Return empty array or handle as per your app's logic in case of permission errors on read
-        return [];
+         // This is a client-side function now, so we can throw the error.
+         // In a real app, you might want to handle this more gracefully.
+         console.error("Permission error fetching templates:", error);
+         throw error;
     }
 }
-
-    

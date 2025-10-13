@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CircleUser } from "lucide-react";
 
 export function UserAvatar() {
-  const { user } = useAuth();
+  const user = useAuth();
 
   return (
     <Avatar>

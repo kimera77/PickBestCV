@@ -3,15 +3,13 @@
 import React, { createContext, useContext, type PropsWithChildren } from 'react';
 import type { User } from 'firebase/auth';
 
-type AuthContextType = {
-  user: User | null;
-};
+type AuthContextType = User | null;
 
-const AuthContext = createContext<AuthContextType>({ user: null });
+const AuthContext = createContext<AuthContextType>(null);
 
 export const AuthProvider = ({ children, user }: PropsWithChildren<{ user: User | null }>) => {
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={user}>
       {children}
     </AuthContext.Provider>
   );

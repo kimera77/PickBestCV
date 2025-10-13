@@ -5,6 +5,7 @@ import type { JobTemplate } from "@/lib/types";
 import JobTemplates from "./job-templates";
 import CvAnalysis from "./cv-analysis";
 import { getJobTemplates } from "@/lib/db/actions";
+import { useAuth } from "@/lib/auth/auth-provider";
 
 type DashboardPageClientProps = {
   initialTemplates: JobTemplate[];
@@ -13,9 +14,12 @@ type DashboardPageClientProps = {
 export default function DashboardPageClient({ initialTemplates }: DashboardPageClientProps) {
   const [templates, setTemplates] = useState<JobTemplate[]>(initialTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
+  const user = useAuth();
+
 
   const refreshTemplates = useCallback(async () => {
-    const freshTemplates = await getJobTemplates();
+    if (!user) return;
+    const freshTemplates = await getJobTemplates(user.uid);
     setTemplates(freshTemplates);
     // If there was no selected template, or the selected one was deleted,
     // select the first one from the fresh list.
@@ -24,12 +28,12 @@ export default function DashboardPageClient({ initialTemplates }: DashboardPageC
     } else if (freshTemplates.length === 0) {
       setSelectedTemplate(null);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, user]);
 
   // Fetch templates on initial mount
   useEffect(() => {
     refreshTemplates();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [refreshTemplates]); 
   
   return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
