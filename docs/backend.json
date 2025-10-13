@@ -127,7 +127,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles.  Documents are only accessible by the user themselves.",
+          "description": "Stores user profiles. Documents are only accessible by the user themselves.",
           "params": [
             {
               "name": "userId",
@@ -200,3 +200,4 @@
     "reasoning": "The Firestore structure is designed to provide a secure, scalable, and easily maintainable backend for the CV Match Pro application. The core principle is to ensure Authorization Independence by denormalizing relevant authorization data, avoiding hierarchical `get()` calls in security rules. This structure is optimized for robustness, clarity, and debuggability.\n\n**Authorization Independence:** User ownership is enforced through path-based rules (`/users/{userId}`). For collaborative data, such as if job position templates were shared, a membership map (`members: {uid: role}`) would be denormalized into each document to avoid `get()` calls in security rules. This ensures atomic operations and simplifies debugging.\n\n**Structural Segregation:**  Each collection is designed to have a homogeneous security posture. User-specific data (CVs, JobPositionTemplates, AnalysisResults) are stored under their respective user IDs, ensuring only the user has access. This simplifies rules and avoids mixing data with differing access requirements in the same collection.\n\n**Access Modeling:** Private data is modeled using path-based ownership. User data is stored under `/users/{userId}`.  The 1:N relationships between User and other entities (JobPositionTemplate, Cv, AnalysisResult) are maintained by nesting data under the user's path. Collaborative features (if implemented) would use membership maps.\n\n**QAPs (Rules are not Filters):** The structure supports secure `list` operations by ensuring that list operations are always performed on collections where the user has the appropriate access.  For example, a user can only list their own JobPositionTemplates, CVs, and AnalysisResults, as these are stored under their user ID."
   }
 }
+    

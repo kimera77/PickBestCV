@@ -1,124 +1,145 @@
 /**
- * @fileoverview Firestore Security Rules for CV Match Pro.
+ * @file Firebase Security Rules for CV Match Pro.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model, where each user has exclusive access to their own data, including profile information,
- * job position templates, CVs, and analysis results.  No data is publicly accessible, and cross-user access is explicitly denied.
+ * This ruleset enforces a strict user-ownership model.  Each user can only access their own data. All data is nested under /users/{userId}.
  *
  * Data Structure:
- * All data is nested under /users/{userId}, creating a clear separation of user data.  Subcollections under each user document store
- * specific data types (jobPositionTemplates, cvs, analysisResults) related to that user.
+ * - /users/{userId}: Stores user profiles.
+ * - /users/{userId}/jobPositionTemplates/{jobPositionTemplateId}: Stores job position templates created by users.
+ * - /users/{userId}/cvs/{cvId}: Stores CVs uploaded by users.
+ * - /users/{userId}/analysisResults/{analysisResultId}: Stores analysis results.
  *
  * Key Security Decisions:
- * - User listing is disallowed to prevent potential information leakage.
- * - All write operations require an authenticated user.
- * - Only the authenticated user can create, update, or delete documents within their own data tree.
+ * - Users can only access their own data.
+ * - Listing all users is disallowed.
+ * - Data validation is relaxed during this prototyping phase to allow for rapid schema iteration.
  *
  * Denormalization for Authorization:
- *  - User ownership is verified by matching the `userId` path parameter with the `request.auth.uid`.
- *  - No `get()` calls are needed as data is nested under the user's document, making authorization checks simple and efficient.
+ * - User ownership is enforced by requiring the `userId` in the document path to match the authenticated user's `uid`.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by a signed-in user.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Verifies user authentication.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the requesting user ID matches the provided user ID.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Enforces user ownership.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the requesting user is the existing owner of the document.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Enforces user ownership for existing documents.
-     */
-    function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Enforces that the `id` field in the incoming data matches the `userId` path parameter.
+     * @description Enforces access control for user profiles. Only the authenticated user can read or write their own profile.
      * @path /users/{userId}
-     * @allow (create) - User with ID 'user123' creates a document with 'id: user123'.
-     * @deny (create) - User with ID 'user123' attempts to create a document with 'id: otherUser'.
-     * @principle Validates the user ID on create.
+     * @allow (create) - An authenticated user can create their profile if the userId matches their auth UID.
+     * @allow (get, update, delete) - An authenticated user can get, update, or delete their profile if the userId matches their auth UID.
+     * @deny (create) - If the userId doesn't match the auth UID.
+     * @deny (get, update, delete) - If the userId doesn't match the auth UID.
+     * @deny (list) - Listing all users is not allowed.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
       allow get: if isOwner(userId);
       allow list: if false;
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
-     * and secures job position templates under the user's path.
+     * @description Enforces access control for job position templates. Only the owner user can read, write, or delete their own job position templates.
      * @path /users/{userId}/jobPositionTemplates/{jobPositionTemplateId}
-     * @allow (create) - User with ID 'user123' creates a job position template under their user path.
-     * @deny (create) - User with ID 'user123' attempts to create a job position template under 'otherUser'.
-     * @principle Validates the user ID on create and enforces user-owned data.
+     * @allow (create) - An authenticated user can create a job position template under their user ID.
+     * @allow (get, update, delete) - An authenticated user can get, update, or delete their own job position templates.
+     * @deny (create) - If the userId doesn't match the auth UID.
+     * @deny (get, update, delete) - If the userId doesn't match the auth UID.
+     * @deny (list) - Listing job position templates is allowed only for the owner.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+       function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
-     * and secures CVs under the user's path.
+     * @description Enforces access control for CVs. Only the owner user can read, write, or delete their own CVs.
      * @path /users/{userId}/cvs/{cvId}
-     * @allow (create) - User with ID 'user123' creates a CV under their user path.
-     * @deny (create) - User with ID 'user123' attempts to create a CV under 'otherUser's path.
-     * @principle Validates the user ID on create and enforces user-owned data.
+     * @allow (create) - An authenticated user can create a CV under their user ID.
+     * @allow (get, update, delete) - An authenticated user can get, update, or delete their own CVs.
+     * @deny (create) - If the userId doesn't match the auth UID.
+     * @deny (get, update, delete) - If the userId doesn't match the auth UID.
+     * @deny (list) - Listing CVs is allowed only for the owner.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId}/cvs/{cvId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
-     * and secures analysis results under the user's path.
+     * @description Enforces access control for analysis results. Only the owner user can read, write, or delete their own analysis results.
      * @path /users/{userId}/analysisResults/{analysisResultId}
-     * @allow (create) - User with ID 'user123' creates an analysis result under their user path.
-     * @deny (create) - User with ID 'user123' attempts to create an analysis result under 'otherUser's path.
-     * @principle Validates the user ID on create and enforces user-owned data.
+     * @allow (create) - An authenticated user can create an analysis result under their user ID.
+     * @allow (get, update, delete) - An authenticated user can get, update, or delete their own analysis results.
+     * @deny (create) - If the userId doesn't match the auth UID.
+     * @deny (get, update, delete) - If the userId doesn't match the auth UID.
+     * @deny (list) - Listing analysis results is allowed only for the owner.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId}/analysisResults/{analysisResultId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
   }

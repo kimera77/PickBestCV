@@ -4,7 +4,7 @@ import { z } from "zod";
 import { firestore } from "./firebase";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { revalidatePath } from "next/cache";
-import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { JobTemplate } from "../types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -25,7 +25,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   }
 
   const validatedData = TemplateSchema.parse(data);
-  const collectionRef = collection(firestore, "jobTemplates");
+  const collectionRef = collection(firestore, `users/${user.uid}/jobTemplates`);
 
   addDoc(collectionRef, {
     ...validatedData,
@@ -53,16 +53,19 @@ export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchem
 
     const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
 
-    const templateRef = doc(firestore, "jobTemplates", id);
+    const templateRef = doc(firestore, `users/${user.uid}/jobTemplates`, id);
     
-    updateDoc(templateRef, validatedData)
+    // When updating, we should not include the userId, as it's immutable.
+    const updateData = { ...validatedData };
+
+    updateDoc(templateRef, updateData)
     .catch(error => {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
           path: templateRef.path,
           operation: 'update',
-          requestResourceData: validatedData,
+          requestResourceData: updateData,
         })
       )
     });
@@ -76,7 +79,7 @@ export async function deleteJobTemplate(templateId: string) {
         throw new Error("No autenticado");
     }
 
-    const templateRef = doc(firestore, "jobTemplates", templateId);
+    const templateRef = doc(firestore, `users/${user.uid}/jobTemplates`, templateId);
     
     deleteDoc(templateRef)
     .catch(error => {
@@ -99,7 +102,8 @@ export async function getJobTemplates(): Promise<JobTemplate[]> {
         return [];
     }
 
-    const q = query(collection(firestore, "jobTemplates"), where("userId", "==", user.uid));
+    const collectionRef = collection(firestore, `users/${user.uid}/jobTemplates`);
+    const q = query(collectionRef);
     
     try {
         const querySnapshot = await getDocs(q);
@@ -112,7 +116,7 @@ export async function getJobTemplates(): Promise<JobTemplate[]> {
          errorEmitter.emit(
             'permission-error',
             new FirestorePermissionError({
-                path: 'jobTemplates',
+                path: collectionRef.path,
                 operation: 'list',
             })
         );
@@ -120,3 +124,5 @@ export async function getJobTemplates(): Promise<JobTemplate[]> {
         return [];
     }
 }
+
+    
