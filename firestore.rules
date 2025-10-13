@@ -1,0 +1,125 @@
+/**
+ * @fileoverview Firestore Security Rules for CV Match Pro.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model, where each user has exclusive access to their own data, including profile information,
+ * job position templates, CVs, and analysis results.  No data is publicly accessible, and cross-user access is explicitly denied.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, creating a clear separation of user data.  Subcollections under each user document store
+ * specific data types (jobPositionTemplates, cvs, analysisResults) related to that user.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent potential information leakage.
+ * - All write operations require an authenticated user.
+ * - Only the authenticated user can create, update, or delete documents within their own data tree.
+ *
+ * Denormalization for Authorization:
+ *  - User ownership is verified by matching the `userId` path parameter with the `request.auth.uid`.
+ *  - No `get()` calls are needed as data is nested under the user's document, making authorization checks simple and efficient.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the request is made by a signed-in user.
+     * @path N/A (Helper function)
+     * @allow N/A (Helper function)
+     * @deny N/A (Helper function)
+     * @principle Verifies user authentication.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the requesting user ID matches the provided user ID.
+     * @path N/A (Helper function)
+     * @allow N/A (Helper function)
+     * @deny N/A (Helper function)
+     * @principle Enforces user ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the requesting user is the existing owner of the document.
+     * @path N/A (Helper function)
+     * @allow N/A (Helper function)
+     * @deny N/A (Helper function)
+     * @principle Enforces user ownership for existing documents.
+     */
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Enforces that the `id` field in the incoming data matches the `userId` path parameter.
+     * @path /users/{userId}
+     * @allow (create) - User with ID 'user123' creates a document with 'id: user123'.
+     * @deny (create) - User with ID 'user123' attempts to create a document with 'id: otherUser'.
+     * @principle Validates the user ID on create.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
+     * and secures job position templates under the user's path.
+     * @path /users/{userId}/jobPositionTemplates/{jobPositionTemplateId}
+     * @allow (create) - User with ID 'user123' creates a job position template under their user path.
+     * @deny (create) - User with ID 'user123' attempts to create a job position template under 'otherUser'.
+     * @principle Validates the user ID on create and enforces user-owned data.
+     */
+    match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
+     * and secures CVs under the user's path.
+     * @path /users/{userId}/cvs/{cvId}
+     * @allow (create) - User with ID 'user123' creates a CV under their user path.
+     * @deny (create) - User with ID 'user123' attempts to create a CV under 'otherUser's path.
+     * @principle Validates the user ID on create and enforces user-owned data.
+     */
+    match /users/{userId}/cvs/{cvId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces that the `userId` field in the incoming data matches the `userId` path parameter,
+     * and secures analysis results under the user's path.
+     * @path /users/{userId}/analysisResults/{analysisResultId}
+     * @allow (create) - User with ID 'user123' creates an analysis result under their user path.
+     * @deny (create) - User with ID 'user123' attempts to create an analysis result under 'otherUser's path.
+     * @principle Validates the user ID on create and enforces user-owned data.
+     */
+    match /users/{userId}/analysisResults/{analysisResultId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
