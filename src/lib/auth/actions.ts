@@ -19,10 +19,14 @@ const signInSchema = z.object({
   password: z.string().min(6),
 });
 
+const privateKey = process.env.FIREBASE_PRIVATE_KEY_B64
+  ? Buffer.from(process.env.FIREBASE_PRIVATE_KEY_B64, 'base64').toString()
+  : undefined;
+
 const serviceAccount = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY!,
+  privateKey: privateKey!,
 };
 
 const serverAuth = getFirebaseAuth({
