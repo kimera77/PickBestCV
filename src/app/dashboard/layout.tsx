@@ -13,7 +13,6 @@ export default async function DashboardLayout({ children }: PropsWithChildren) {
         redirect('/login');
     }
     
-
   return (
     <AuthProvider user={user}>
       <LanguageProvider>
