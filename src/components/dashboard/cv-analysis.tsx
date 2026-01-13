@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, WandSparkles } from "lucide-react";
-import { performCvAnalysis, type CvAnalysisFormState } from "@/lib/actions";
+import { performCvAnalysis, type CvAnalysisFormState } from "@/lib/ai/actions";
 import { useToast } from "@/hooks/use-toast";
 import CvUpload from "./cv-upload";
 import AnalysisResults from "./analysis-results";

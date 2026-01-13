@@ -4,8 +4,6 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/firebase/server";
 import { revalidatePath } from "next/cache";
 import type { JobTemplate } from "../types";
-import { getCurrentUser } from "../auth/actions";
-
 
 const TemplateSchema = z.object({
   title: z.string().min(1, "El título es obligatorio."),
@@ -137,10 +135,10 @@ Requisitos:
 ];
 
 export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
-  // If no userId is provided, return default templates.
   if (!userId) {
     return defaultTemplates;
   }
+  
   const firestore = await getAdminFirestore();
   const collectionRef = firestore.collection(`users/${userId}/jobTemplates`);
   
@@ -149,12 +147,10 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
     const userTemplates: JobTemplate[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      // Ensure createdAt is a Date object for consistent sorting
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(0);
       userTemplates.push({ id: doc.id, ...data, createdAt } as JobTemplate);
     });
 
-    // If the user has no templates, show the default ones.
     if (userTemplates.length === 0) {
       return defaultTemplates;
     }
@@ -162,8 +158,8 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
     return userTemplates;
 
   } catch (error) {
-    console.error("Permission or other error fetching templates:", error);
-    // Return default templates as a fallback on error
+    console.error("Permission or other error fetching templates for user:", userId, error);
+    // On error, return default templates as a safe fallback
     return defaultTemplates;
   }
 }
