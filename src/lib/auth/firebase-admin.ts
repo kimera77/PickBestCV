@@ -2,12 +2,6 @@
 import "server-only";
 import * as admin from "firebase-admin";
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_B64
-  ? JSON.parse(
-      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64, "base64").toString()
-    )
-  : undefined;
-
 let _app: admin.app.App | null = null;
 let _firestore: admin.firestore.Firestore | null = null;
 
@@ -21,12 +15,10 @@ export async function getAdminApp() {
     return _app;
   }
 
-  if (!serviceAccount) {
-    throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_B64 environment variable.");
-  }
-
+  // Use application default credentials which are automatically available
+  // in Google Cloud environments like App Hosting.
   _app = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.applicationDefault(),
   });
 
   return _app;
