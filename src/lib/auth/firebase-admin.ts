@@ -8,20 +8,39 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_B64
     )
   : undefined;
 
+let _app: admin.app.App | null = null;
+let _firestore: admin.firestore.Firestore | null = null;
 
 export async function getAdminApp() {
+  if (_app) {
+    return _app;
+  }
+
   if (admin.apps.length > 0) {
-    return admin.apps[0]!;
+    _app = admin.apps[0]!;
+    return _app;
   }
 
   if (!serviceAccount) {
     throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_B64 environment variable.");
   }
 
-  return admin.initializeApp({
+  _app = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+
+  return _app;
 }
+
+export async function getAdminFirestore() {
+    if (_firestore) {
+        return _firestore;
+    }
+    await getAdminApp(); // Ensure app is initialized
+    _firestore = admin.firestore();
+    return _firestore;
+}
+
 
 export async function verifySessionCookie(sessionCookie: string) {
     try {

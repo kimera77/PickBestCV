@@ -1,12 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { firestore } from "./firebase";
+import { getAdminFirestore } from "../auth/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { JobTemplate } from "../types";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 import { getCurrentUser } from "../auth/actions";
 
 
@@ -25,25 +23,18 @@ const TemplateUpdateSchema = z.object({
 
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   const validatedData = TemplateSchema.parse(data);
-  const collectionRef = collection(firestore, "users", validatedData.userId, "jobTemplates");
+  const firestore = await getAdminFirestore();
+  const collectionRef = firestore.collection(`users/${validatedData.userId}/jobTemplates`);
 
   try {
-    await addDoc(collectionRef, {
+    await collectionRef.add({
       title: validatedData.title,
       description: validatedData.description,
       userId: validatedData.userId,
       createdAt: new Date(),
     });
   } catch (error) {
-    const user = await getCurrentUser();
-    errorEmitter.emit(
-      'permission-error',
-      new FirestorePermissionError({
-        path: collectionRef.path,
-        operation: 'create',
-        requestResourceData: { ...validatedData, createdAt: "Firestore.FieldValue.serverTimestamp()" },
-      })
-    )
+    console.error("Error creating job template:", error);
     // Re-throw or handle as needed
     throw error;
   }
@@ -53,23 +44,15 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
 
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
     const { id, userId, ...validatedData } = TemplateUpdateSchema.parse(data);
-
-    const templateRef = doc(firestore, "users", userId, "jobTemplates", id);
+    const firestore = await getAdminFirestore();
+    const templateRef = firestore.doc(`users/${userId}/jobTemplates/${id}`);
     
     const updateData = { ...validatedData };
 
     try {
-      await updateDoc(templateRef, updateData)
+      await templateRef.update(updateData);
     } catch(error) {
-      const user = await getCurrentUser();
-      errorEmitter.emit(
-        'permission-error',
-        new FirestorePermissionError({
-          path: templateRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
-        })
-      )
+      console.error("Error updating job template:", error);
       throw error;
     }
 
@@ -80,21 +63,14 @@ export async function deleteJobTemplate(templateId: string, userId: string) {
     if (!userId) {
         throw new Error("No autenticado");
     }
-
-    const templateRef = doc(firestore, "users", userId, "jobTemplates", templateId);
+    const firestore = await getAdminFirestore();
+    const templateRef = firestore.doc(`users/${userId}/jobTemplates/${templateId}`);
     
     try {
-      await deleteDoc(templateRef)
+      await templateRef.delete();
     } catch(error) {
-       const user = await getCurrentUser();
-        errorEmitter.emit(
-        'permission-error',
-        new FirestorePermissionError({
-            path: templateRef.path,
-            operation: 'delete',
-        })
-        )
-        throw error;
+       console.error("Error deleting job template:", error);
+       throw error;
     }
 
     revalidatePath("/dashboard");
@@ -166,12 +142,11 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
   if (!userId) {
     return defaultTemplates;
   }
-
-  const collectionRef = collection(firestore, `users/${userId}/jobTemplates`);
-  const q = query(collectionRef);
+  const firestore = await getAdminFirestore();
+  const collectionRef = firestore.collection(`users/${userId}/jobTemplates`);
   
   try {
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await collectionRef.get();
     const userTemplates: JobTemplate[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
@@ -192,7 +167,7 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
   } catch (error) {
     console.error("Permission or other error fetching templates:", error);
     // Return default templates as a fallback on error
-    return [];
+    return defaultTemplates;
   }
 }
     
