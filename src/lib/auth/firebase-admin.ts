@@ -16,10 +16,9 @@ export async function getAdminApp() {
   }
 
   // Use application default credentials which are automatically available
-  // in Google Cloud environments like App Hosting.
-  _app = admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-  });
+  // in Google Cloud environments like App Hosting by calling initializeApp()
+  // without arguments.
+  _app = admin.initializeApp();
 
   return _app;
 }
