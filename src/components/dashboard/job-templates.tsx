@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useState } from "react";
-import { deleteJobTemplate } from "@/lib/db/actions";
+import { deleteJobTemplate } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth/auth-provider";
 

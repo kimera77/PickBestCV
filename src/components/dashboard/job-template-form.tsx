@@ -18,8 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
 import { PlusCircle, Loader2, Save, Upload, WandSparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
-import { extractTextFromPdfAction } from "@/lib/actions";
+import { createJobTemplate, updateJobTemplate, extractTextFromPdfAction } from "@/lib/actions";
 import * as pdfjsLib from 'pdfjs-dist';
 import { useAuth } from "@/lib/auth/auth-provider";
 

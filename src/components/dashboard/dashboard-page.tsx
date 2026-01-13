@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import type { JobTemplate } from "@/lib/types";
 import JobTemplates from "./job-templates";
 import CvAnalysis from "./cv-analysis";
-import { getJobTemplates } from "@/lib/db/actions";
+import { getJobTemplates } from "@/lib/actions";
 import { useAuth } from "@/lib/auth/auth-provider";
 
 type DashboardPageClientProps = {
