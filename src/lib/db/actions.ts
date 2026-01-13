@@ -101,7 +101,7 @@ export async function deleteJobTemplate(templateId: string, userId: string) {
 }
 
 
-const defaultTemplates = [
+const defaultTemplates: JobTemplate[] = [
     {
       id: "default-template-1",
       title: "Profesor/a de Secundaria",
@@ -191,12 +191,8 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
 
   } catch (error) {
     console.error("Permission or other error fetching templates:", error);
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: collectionRef.path,
-      operation: 'list',
-    }));
     // Return default templates as a fallback on error
-    return defaultTemplates;
+    return [];
   }
 }
     
