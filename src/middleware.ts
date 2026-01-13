@@ -13,18 +13,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // If trying to access a protected route and no session, redirect to login
-  if (!isPublicRoute && !sessionCookie && !pathname.startsWith('/api')) {
-     // This special case handles the root path '/'
-    if (pathname === '/') {
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-    // Redirect any other protected route
-    if (pathname.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
+  if (!isPublicRoute && !sessionCookie && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If at root and has session, go to dashboard. If no session, go to login.
+  // If at root, decide where to go based on session
   if (pathname === '/') {
     if (sessionCookie) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
