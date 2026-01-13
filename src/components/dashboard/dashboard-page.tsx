@@ -18,9 +18,15 @@ export default function DashboardPageClient({ initialTemplates }: DashboardPageC
 
 
   const refreshTemplates = useCallback(async () => {
-    if (!user) return;
-    const freshTemplates = await getJobTemplates(user.uid);
+    if (user === undefined) return; // Still loading
+
+    // If user is anonymous or not logged in, get default templates.
+    // Otherwise, get user-specific templates.
+    const userId = (user && !user.isAnonymous) ? user.uid : undefined;
+    const freshTemplates = await getJobTemplates(userId);
+
     setTemplates(freshTemplates);
+    
     // If there was no selected template, or the selected one was deleted,
     // select the first one from the fresh list.
     if ((!selectedTemplate || !freshTemplates.find(t => t.id === selectedTemplate.id)) && freshTemplates.length > 0) {
