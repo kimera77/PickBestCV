@@ -149,6 +149,29 @@ export async function handleSignIn(values: z.infer<typeof signInSchema>) {
   return { success: true };
 }
 
+export async function handleAnonymousSignIn() {
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          returnSecureToken: true
+      })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+      return { error: getFirebaseErrorMessage(data?.error?.message) };
+  }
+
+  await setAuthCookies(data.idToken);
+  
+  return { success: true };
+}
+
+
 export async function handleSignOut() {
     cookies().delete("session");
     revalidatePath('/');

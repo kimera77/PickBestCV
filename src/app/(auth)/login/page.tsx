@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
-import { handleSignIn } from "@/lib/auth/actions";
+import { handleSignIn, handleAnonymousSignIn } from "@/lib/auth/actions";
 import { Logo } from "@/components/logo";
 
 const formSchema = z.object({
@@ -36,6 +36,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isAnonymousLoading, setAnonymousLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,6 +56,18 @@ export default function LoginPage() {
     }
   };
 
+  const onAnonymousSubmit = async () => {
+    setError(null);
+    setAnonymousLoading(true);
+    const result = await handleAnonymousSignIn();
+    if (result.error) {
+      setError(result.error);
+      setAnonymousLoading(false);
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   return (
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
@@ -67,55 +80,71 @@ export default function LoginPage() {
         </Link>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error de inicio de sesión</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Correo electrónico</FormLabel>
-                  <FormControl>
-                    <Input placeholder="m@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+        <div className="grid gap-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center">
-                    <FormLabel>Contraseña</FormLabel>
-                    <Link
-                      href="#"
-                      className="ml-auto inline-block text-sm text-primary hover:underline"
-                    >
-                      ¿Has olvidado tu contraseña?
-                    </Link>
-                  </div>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full font-semibold" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Iniciar sesión
-            </Button>
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Correo electrónico</FormLabel>
+                    <FormControl>
+                      <Input placeholder="m@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center">
+                      <FormLabel>Contraseña</FormLabel>
+                      <Link
+                        href="#"
+                        className="ml-auto inline-block text-sm text-primary hover:underline"
+                      >
+                        ¿Has olvidado tu contraseña?
+                      </Link>
+                    </div>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full font-semibold" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Iniciar sesión
+              </Button>
+            </form>
+          </Form>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                O continuar con
+              </span>
+            </div>
+          </div>
+          <Button variant="outline" className="w-full font-semibold" onClick={onAnonymousSubmit} disabled={isAnonymousLoading}>
+            {isAnonymousLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Entrar sin usuario
+          </Button>
+        </div>
         <div className="mt-4 text-center text-sm">
           ¿No tienes una cuenta?{" "}
           <Link href="/signup" className="font-semibold text-primary hover:underline">
