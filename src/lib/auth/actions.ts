@@ -4,8 +4,7 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getFirebaseAuth, type Tokens } from "next-firebase-auth-edge/lib/auth";
-import type { User } from "firebase/auth";
+import { getAdminApp } from "./firebase-admin";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -19,35 +18,23 @@ const signInSchema = z.object({
   password: z.string().min(6),
 });
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_B64
-  ? JSON.parse(
-      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64, 'base64').toString()
-    )
-  : undefined;
-
-const serverAuth = getFirebaseAuth({
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  serviceAccount,
-});
-
 async function setAuthCookies(idToken: string) {
-  let tokens: Tokens;
   try {
-     tokens = await serverAuth.getTokens(idToken);
+    const adminAuth = (await getAdminApp()).auth();
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+
+    cookies().set("session", sessionCookie, {
+      maxAge: expiresIn,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "lax",
+    });
   } catch (e: any) {
-    console.error(e);
-    throw new Error('Failed to get tokens');
+    console.error("Error creating session cookie:", e);
+    throw new Error('Failed to create session.');
   }
-
-  const session = await serverAuth.createSession(tokens.token, {});
-
-  cookies().set("session", session, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    sameSite: "lax",
-    maxAge: 12 * 60 * 60 * 24 * 1000, // 12 days
-  });
 }
 
 function getFirebaseErrorMessage(errorCode: string): string {
@@ -174,16 +161,18 @@ export async function handleSignOut() {
     redirect('/login');
 }
 
-export async function getCurrentUser(): Promise<User | null> {
-  const session = cookies().get("session")?.value;
-  if (!session) {
+export async function getCurrentUser() {
+  const sessionCookie = cookies().get("session")?.value;
+  if (!sessionCookie) {
     return null;
   }
 
   try {
-    const user = await serverAuth.verifySessionCookie(session, true);
-    return user;
+    const adminAuth = (await getAdminApp()).auth();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    return decodedClaims;
   } catch (error) {
+    // Session cookie is invalid.
     console.error("Error verifying session cookie", error);
     return null;
   }
