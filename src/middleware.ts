@@ -1,28 +1,37 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/actions";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const user = await getCurrentUser();
+  const sessionCookie = request.cookies.get("session");
   const publicRoutes = ["/login", "/signup"];
 
-  // Always redirect from the root to the login page if not authenticated, or dashboard if authenticated
-  if (pathname === '/') {
-    if (user) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-  
-  if (user && publicRoutes.includes(pathname)) {
+  const isPublicRoute = publicRoutes.includes(pathname);
+
+  // If trying to access a public route but session exists, redirect to dashboard
+  if (isPublicRoute && sessionCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!user && !publicRoutes.includes(pathname) && !pathname.startsWith('/api')) {
-     if (pathname.startsWith('/dashboard')) {
+  // If trying to access a protected route and no session, redirect to login
+  if (!isPublicRoute && !sessionCookie && !pathname.startsWith('/api')) {
+     // This special case handles the root path '/'
+    if (pathname === '/') {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+    // Redirect any other protected route
+    if (pathname.startsWith('/dashboard')) {
         return NextResponse.redirect(new URL("/login", request.url));
-     }
+    }
   }
+
+  // If at root and has session, go to dashboard. If no session, go to login.
+  if (pathname === '/') {
+    if (sessionCookie) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
 
   return NextResponse.next();
 }
