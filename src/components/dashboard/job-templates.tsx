@@ -27,6 +27,7 @@ import {
 import { useState } from "react";
 import { deleteJobTemplate } from "@/lib/db/actions";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth/auth-provider";
 
 type JobTemplatesProps = {
   templates: JobTemplate[];
@@ -41,12 +42,21 @@ export default function JobTemplates({
   setSelectedTemplate,
   onTemplateUpdate,
 }: JobTemplatesProps) {
+  const user = useAuth();
   const { toast } = useToast();
   const [editingTemplate, setEditingTemplate] = useState<JobTemplate | null>(null);
 
   const handleDelete = async (templateId: string) => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Error de autenticación",
+            description: "Debes iniciar sesión para eliminar una plantilla.",
+        });
+        return;
+    }
     try {
-      await deleteJobTemplate(templateId);
+      await deleteJobTemplate(templateId, user.uid);
       onTemplateUpdate();
        toast({
         title: "Plantilla eliminada",
@@ -112,7 +122,7 @@ export default function JobTemplates({
                                 <AlertDialog>
                                   <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-70 group-hover:opacity-100">
+                                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-70 group-hover:opacity-100" disabled={template.userId === 'default'}>
                                               <MoreVertical className="h-4 w-4" />
                                           </Button>
                                       </DropdownMenuTrigger>

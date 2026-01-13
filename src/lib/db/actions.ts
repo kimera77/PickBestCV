@@ -2,9 +2,8 @@
 
 import { z } from "zod";
 import { firestore } from "./firebase";
-import { getCurrentUser } from "@/lib/auth/actions";
 import { revalidatePath } from "next/cache";
-import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc, where } from "firebase/firestore";
 import type { JobTemplate } from "../types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -12,24 +11,24 @@ import { FirestorePermissionError } from "@/firebase/errors";
 const TemplateSchema = z.object({
   title: z.string().min(1, "El título es obligatorio."),
   description: z.string().min(1, "La descripción es obligatoria."),
+  userId: z.string().min(1, "Se requiere el ID de usuario.")
 });
 
-const TemplateUpdateSchema = TemplateSchema.extend({
+const TemplateUpdateSchema = z.object({
     id: z.string().min(1),
+    title: z.string().min(1, "El título es obligatorio."),
+    description: z.string().min(1, "La descripción es obligatoria."),
+    userId: z.string().min(1, "Se requiere el ID de usuario.")
 });
 
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
-  const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("No autenticado");
-  }
-
   const validatedData = TemplateSchema.parse(data);
-  const collectionRef = collection(firestore, "users", user.uid, "jobTemplates");
+  const collectionRef = collection(firestore, "users", validatedData.userId, "jobTemplates");
 
   addDoc(collectionRef, {
-    ...validatedData,
-    userId: user.uid,
+    title: validatedData.title,
+    description: validatedData.description,
+    userId: validatedData.userId,
     createdAt: new Date(),
   }).catch(error => {
     errorEmitter.emit(
@@ -37,7 +36,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
       new FirestorePermissionError({
         path: collectionRef.path,
         operation: 'create',
-        requestResourceData: { ...validatedData, userId: user.uid },
+        requestResourceData: { ...validatedData },
       })
     )
   });
@@ -46,16 +45,10 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
 }
 
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
-    const user = await getCurrentUser();
-    if (!user) {
-        throw new Error("No autenticado");
-    }
+    const { id, userId, ...validatedData } = TemplateUpdateSchema.parse(data);
 
-    const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
-
-    const templateRef = doc(firestore, "users", user.uid, "jobTemplates", id);
+    const templateRef = doc(firestore, "users", userId, "jobTemplates", id);
     
-    // When updating, we should not include the userId, as it's immutable.
     const updateData = { ...validatedData };
 
     updateDoc(templateRef, updateData)
@@ -73,13 +66,12 @@ export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchem
     revalidatePath("/dashboard");
 }
 
-export async function deleteJobTemplate(templateId: string) {
-    const user = await getCurrentUser();
-    if (!user) {
+export async function deleteJobTemplate(templateId: string, userId: string) {
+    if (!userId) {
         throw new Error("No autenticado");
     }
 
-    const templateRef = doc(firestore, "users", user.uid, "jobTemplates", templateId);
+    const templateRef = doc(firestore, "users", userId, "jobTemplates", templateId);
     
     deleteDoc(templateRef)
     .catch(error => {
@@ -103,21 +95,43 @@ export async function getJobTemplates(userId: string): Promise<JobTemplate[]> {
 
   const collectionRef = collection(firestore, `users/${userId}/jobTemplates`);
   const q = query(collectionRef);
-  let templates: JobTemplate[] = [];
-
+  
   try {
     const querySnapshot = await getDocs(q);
+    const templates: JobTemplate[] = [];
     querySnapshot.forEach((doc) => {
       templates.push({ id: doc.id, ...doc.data() } as JobTemplate);
     });
+
+    // If the user has no templates, provide a default one.
+    if (templates.length === 0) {
+      templates.push({
+        id: "default-template-1",
+        title: "Profesor/a de Secundaria",
+        description: `Buscamos un/a profesor/a de secundaria entusiasta y dedicado/a para unirse a nuestro equipo.
+
+Responsabilidades:
+- Impartir clases de [Asignatura] a estudiantes de secundaria.
+- Preparar y calificar exámenes, trabajos y proyectos.
+- Crear un ambiente de aprendizaje positivo e inclusivo.
+- Colaborar con otros profesores y personal del centro.
+
+Requisitos:
+- Grado en [Área de estudio] o similar.
+- Máster en Formación del Profesorado o CAP.
+- Excelentes habilidades de comunicación y organización.
+- Pasión por la enseñanza y el desarrollo de los jóvenes.`,
+        userId: "default",
+      });
+    }
+
+    return templates;
+
   } catch (error) {
     console.error("Permission error fetching templates:", error);
-    // Don't re-throw, just return empty or default data
-  }
-
-  // If the user has no templates, provide a default one.
-  if (templates.length === 0) {
-    templates.push({
+    // In case of a permission error (e.g., for anonymous users on a fresh start),
+    // just return the default template.
+    return [{
       id: "default-template-1",
       title: "Profesor/a de Secundaria",
       description: `Buscamos un/a profesor/a de secundaria entusiasta y dedicado/a para unirse a nuestro equipo.
@@ -134,8 +148,6 @@ Requisitos:
 - Excelentes habilidades de comunicación y organización.
 - Pasión por la enseñanza y el desarrollo de los jóvenes.`,
       userId: "default",
-    });
+    }];
   }
-
-  return templates;
 }

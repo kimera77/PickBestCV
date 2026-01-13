@@ -33,7 +33,8 @@ async function setAuthCookies(idToken: string) {
     });
   } catch (e: any) {
     console.error("Error creating session cookie:", e);
-    throw new Error('Failed to create session.');
+    // Instead of a generic error, let's re-throw the original for better debugging
+    throw new Error(`Failed to create session: ${e.message}`);
   }
 }
 
@@ -167,13 +168,5 @@ export async function getCurrentUser() {
     return null;
   }
 
-  try {
-    const adminAuth = (await getAdminApp()).auth();
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-    return decodedClaims;
-  } catch (error) {
-    // Session cookie is invalid.
-    console.error("Error verifying session cookie", error);
-    return null;
-  }
+  return await verifySessionCookie(sessionCookie);
 }

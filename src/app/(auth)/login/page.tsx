@@ -25,13 +25,35 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
-import { handleSignIn, handleAnonymousSignIn } from "@/lib/auth/actions";
+import { clientHandleSignIn, clientHandleAnonymousSignIn } from "@/lib/auth/auth-provider";
 import { Logo } from "@/components/logo";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
 });
+
+function getFirebaseErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+        case 'auth/email-already-in-use':
+            return 'Este correo electrónico ya está en uso por otra cuenta.';
+        case 'auth/invalid-email':
+            return 'El formato del correo electrónico no es válido.';
+        case 'auth/operation-not-allowed':
+            return 'El inicio de sesión con correo y contraseña no está habilitado.';
+        case 'auth/weak-password':
+            return 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
+        case 'auth/user-disabled':
+            return 'Este usuario ha sido deshabilitado.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+            return 'Correo electrónico o contraseña incorrectos.';
+        default:
+            return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
+    }
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,23 +70,23 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setError(null);
-    const result = await handleSignIn(values);
-    if (result.error) {
-      setError(result.error);
-    } else {
+    try {
+      await clientHandleSignIn(values.email, values.password);
       router.push("/dashboard");
+    } catch (e: any) {
+      setError(getFirebaseErrorMessage(e.code));
     }
   };
 
   const onAnonymousSubmit = async () => {
     setError(null);
     setAnonymousLoading(true);
-    const result = await handleAnonymousSignIn();
-    if (result.error) {
-      setError(result.error);
-      setAnonymousLoading(false);
-    } else {
+    try {
+      await clientHandleAnonymousSignIn();
       router.push("/dashboard");
+    } catch (e: any) {
+      setError(getFirebaseErrorMessage(e.code));
+      setAnonymousLoading(false);
     }
   };
 

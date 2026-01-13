@@ -13,13 +13,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import LanguageSwitcher from "./language-switcher";
-import { handleSignOut } from "@/lib/auth/actions";
+import { clientHandleSignOut } from "@/lib/auth/auth-provider";
 import { UserAvatar } from "./user-avatar";
 import { Logo } from "@/components/logo";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useRouter } from "next/navigation";
 
 
 export default function Header() {
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await clientHandleSignOut();
+    router.push('/login');
+  }
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
         <Link
@@ -82,13 +90,9 @@ export default function Header() {
             <DropdownMenuItem>Perfil</DropdownMenuItem>
             <DropdownMenuItem>Ajustes</DropdownMenuItem>
             <DropdownMenuSeparator />
-             <form action={handleSignOut} className="w-full">
-                <button type="submit" className="w-full">
-                  <DropdownMenuItem>
-                    Cerrar sesión
-                  </DropdownMenuItem>
-                </button>
-            </form>
+             <DropdownMenuItem onClick={handleSignOut}>
+                Cerrar sesión
+              </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -1,3 +1,4 @@
+"use server";
 import "server-only";
 import * as admin from "firebase-admin";
 
@@ -13,7 +14,22 @@ export async function getAdminApp() {
     return admin.apps[0]!;
   }
 
+  if (!serviceAccount) {
+    throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_B64 environment variable.");
+  }
+
   return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+}
+
+export async function verifySessionCookie(sessionCookie: string) {
+    try {
+        const adminAuth = (await getAdminApp()).auth();
+        const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+        return decodedClaims;
+    } catch (error) {
+        console.error("Error verifying session cookie", error);
+        return null;
+    }
 }

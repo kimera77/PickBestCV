@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createJobTemplate, updateJobTemplate } from "@/lib/db/actions";
 import { extractTextFromPdfAction } from "@/lib/actions";
 import * as pdfjsLib from 'pdfjs-dist';
+import { useAuth } from "@/lib/auth/auth-provider";
 
 // Configure the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -35,6 +36,7 @@ type JobTemplateFormProps = {
 };
 
 export default function JobTemplateForm({ children, templateToEdit, onTemplateSaved, open: controlledOpen, onOpenChange: setControlledOpen }: JobTemplateFormProps) {
+  const user = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = setControlledOpen ?? setInternalOpen;
@@ -62,13 +64,22 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
 
   const handleSave = async () => {
     if (!title || !description) return;
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Error de autenticación",
+            description: "Debes iniciar sesión para guardar una plantilla.",
+        });
+        return;
+    }
+
 
     setIsSaving(true);
     try {
       if (isEditing) {
-        await updateJobTemplate({ id: templateToEdit.id, title, description });
+        await updateJobTemplate({ id: templateToEdit.id, title, description, userId: user.uid });
       } else {
-        await createJobTemplate({ title, description });
+        await createJobTemplate({ title, description, userId: user.uid });
       }
       onTemplateSaved();
       toast({

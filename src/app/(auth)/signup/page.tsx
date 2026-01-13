@@ -25,8 +25,9 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState } from "react";
-import { handleSignUp } from "@/lib/auth/actions";
+import { clientHandleSignUp } from "@/lib/auth/auth-provider";
 import { Logo } from "@/components/logo";
+import { updateProfile } from "firebase/auth";
 
 
 const formSchema = z.object({
@@ -35,6 +36,22 @@ const formSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
 });
+
+function getFirebaseErrorMessage(errorCode: string): string {
+    switch (errorCode) {
+        case 'auth/email-already-in-use':
+            return 'Este correo electrónico ya está en uso por otra cuenta.';
+        case 'auth/invalid-email':
+            return 'El formato del correo electrónico no es válido.';
+        case 'auth/operation-not-allowed':
+            return 'El inicio de sesión con correo y contraseña no está habilitado.';
+        case 'auth/weak-password':
+            return 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
+        default:
+            return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
+    }
+}
+
 
 export default function SignupPage() {
   const router = useRouter();
@@ -52,11 +69,14 @@ export default function SignupPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setError(null);
-    const result = await handleSignUp(values);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      router.push("/dashboard");
+    try {
+        const userCredential = await clientHandleSignUp(values.email, values.password);
+        await updateProfile(userCredential.user, {
+            displayName: `${values.firstName} ${values.lastName}`
+        });
+        router.push("/dashboard");
+    } catch(e: any) {
+        setError(getFirebaseErrorMessage(e.code));
     }
   };
 
