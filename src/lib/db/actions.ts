@@ -7,7 +7,7 @@ import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "f
 import type { JobTemplate } from "../types";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
-import { getCurrentUser } from "../auth/firebase-admin";
+import { getCurrentUser } from "../auth/actions";
 
 
 const TemplateSchema = z.object({
@@ -116,20 +116,13 @@ export async function getJobTemplates(userId: string): Promise<JobTemplate[]> {
     const querySnapshot = await getDocs(q);
     const userTemplates: JobTemplate[] = [];
     querySnapshot.forEach((doc) => {
-      // Ensure data has createdAt and it's a timestamp before converting
       const data = doc.data();
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        userTemplates.push({ id: doc.id, ...data } as JobTemplate);
-      } else {
-        // Handle case where createdAt is missing or not a timestamp
-        userTemplates.push({ id: doc.id, ...data, createdAt: new Date(0) } as JobTemplate);
-      }
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+      userTemplates.push({ id: doc.id, ...data, createdAt } as JobTemplate);
     });
 
-    // Sort user templates by creation date
-    const sortedUserTemplates = userTemplates.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
+    const sortedUserTemplates = userTemplates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-    // If the user has no templates, provide default ones.
     if (sortedUserTemplates.length === 0) {
       const defaultTemplates = [
         {
@@ -197,32 +190,13 @@ Requisitos:
 
   } catch (error) {
     console.error("Permission or other error fetching templates:", error);
-    // In case of any error, return the default templates as a fallback.
-    const defaultTemplates = [
-      {
-        id: "default-template-1",
-        title: "Profesor/a de Secundaria",
-        description: `Buscamos un/a profesor/a de secundaria entusiasta y dedicado/a para unirse a nuestro equipo...`,
-        userId: "default",
-        createdAt: new Date('2024-01-01T10:00:00Z'),
-      },
-      {
-        id: "default-template-2",
-        title: "Ingeniero/a de Software",
-        description: `Buscamos un/a Ingeniero/a de Software con talento para diseñar...`,
-        userId: "default",
-        createdAt: new Date('2024-01-01T09:00:00Z'),
-      },
-      {
-        id: "default-template-3",
-        title: "Diseñador/a Gráfico/a",
-        description: `Buscamos un/a diseñador/a gráfico/a creativo/a para producir contenido visual atractivo...`,
-        userId: "default",
-        createdAt: new Date('2024-01-01T08:00:00Z'),
-      }
-    ];
-    // For brevity, you might shorten descriptions here
-    return defaultTemplates.map(t => ({...t, description: t.description.substring(0, 100) + '...'}));
+    const user = await getCurrentUser();
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: collectionRef.path,
+      operation: 'list',
+      auth: user,
+    }));
+    return [];
   }
 }
     
