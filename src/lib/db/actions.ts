@@ -145,7 +145,7 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
   const collectionRef = firestore.collection(`users/${userId}/jobTemplates`);
   
   try {
-    const querySnapshot = await collectionRef.get();
+    const querySnapshot = await collectionRef.orderBy("createdAt", "desc").get();
     const userTemplates: JobTemplate[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
@@ -158,10 +158,8 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
     if (userTemplates.length === 0) {
       return defaultTemplates;
     }
-
-    // Sort user's templates by creation date, newest first.
-    const sortedUserTemplates = userTemplates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    return sortedUserTemplates;
+    
+    return userTemplates;
 
   } catch (error) {
     console.error("Permission or other error fetching templates:", error);
@@ -169,4 +167,3 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
     return defaultTemplates;
   }
 }
-    
