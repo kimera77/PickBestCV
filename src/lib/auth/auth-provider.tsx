@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, type PropsWithChildren, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, type User, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/client';
 
 // Initialize firebase and auth
 const { auth } = initializeFirebase();

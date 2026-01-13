@@ -1,9 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { getAdminFirestore } from "../auth/firebase-admin";
+import { getAdminFirestore } from "@/firebase/server";
 import { revalidatePath } from "next/cache";
-import { collection, addDoc, getDocs, query, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import type { JobTemplate } from "../types";
 import { getCurrentUser } from "../auth/actions";
 

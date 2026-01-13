@@ -4,7 +4,7 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getAdminApp } from "./firebase-admin";
+import { getAdminApp, verifySessionCookie } from "@/firebase/server";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, { message: "El nombre es obligatorio." }),
