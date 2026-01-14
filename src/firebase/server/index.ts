@@ -1,35 +1,28 @@
-"use server";
+// ELIMINA "use server" de la primera línea.
 import "server-only";
 import * as admin from "firebase-admin";
 
 let _app: admin.app.App | null = null;
-let _firestore: admin.firestore.Firestore | null = null;
 
 export async function getAdminApp() {
-  if (_app) {
-    return _app;
-  }
-
+  // Comprobamos si ya existe una app para evitar re-inicializar en cada recarga (HMR)
   if (admin.apps.length > 0) {
-    _app = admin.apps[0]!;
-    return _app;
+    return admin.apps[0]!;
   }
 
-  // Use application default credentials which are automatically available
-  // in Google Cloud environments like App Hosting by calling initializeApp()
-  // without arguments.
-  _app = admin.initializeApp();
-
+  if (!_app) {
+    _app = admin.initializeApp({
+      // Si estás en local, asegúrate de tener las credenciales configuradas
+      // o añade aquí explícitamente el credential: admin.credential.cert(...)
+    });
+  }
+  
   return _app;
 }
 
 export async function getAdminFirestore() {
-    if (_firestore) {
-        return _firestore;
-    }
-    await getAdminApp(); // Ensure app is initialized
-    _firestore = admin.firestore();
-    return _firestore;
+  const app = await getAdminApp();
+  return admin.firestore(app);
 }
 
 
