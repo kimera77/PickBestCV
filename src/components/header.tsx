@@ -11,9 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import LanguageSwitcher from "./language-switcher";
+import LanguageSwitcher from "./dashboard/language-switcher";
 import { handleSignOut } from "@/lib/auth/actions";
-import { UserAvatar } from "./user-avatar";
+import { UserAvatar } from "./dashboard/user-avatar";
 import { Logo } from "@/components/logo";
 
 

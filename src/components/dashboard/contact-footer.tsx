@@ -1,6 +1,7 @@
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
+import { logError } from "@/lib/errors";
 
 export default function ContactFooter() {
   const { toast } = useToast();
@@ -13,7 +14,7 @@ export default function ContactFooter() {
         description: "El correo electrónico ha sido copiado a tu portapapeles.",
       });
     }).catch(err => {
-      console.error('Failed to copy email: ', err);
+      logError(err, { action: 'copyEmail', email });
       toast({
         variant: "destructive",
         title: "Error al copiar",

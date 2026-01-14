@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, type PropsWithChildren, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, type User, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/client';
 
 // Initialize firebase and auth
 const { auth } = initializeFirebase();
@@ -44,7 +44,7 @@ export const useAuth = () => {
 };
 
 // Client-side auth actions that components can call
-export const clientHandleSignIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
-export const clientHandleSignUp = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+export const clientHandleSignIn = (email: string, password: string) => signInWithEmailAndPassword(auth, email, password);
+export const clientHandleSignUp = (email: string, password: string) => createUserWithEmailAndPassword(auth, email, password);
 export const clientHandleAnonymousSignIn = () => signInAnonymously(auth);
 export const clientHandleSignOut = () => auth.signOut();

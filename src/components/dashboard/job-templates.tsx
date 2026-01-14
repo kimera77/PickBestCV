@@ -25,15 +25,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useState } from "react";
-import { deleteJobTemplate } from "@/lib/db/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { useDeleteTemplate } from "@/hooks/use-templates";
 
 type JobTemplatesProps = {
   templates: JobTemplate[];
   selectedTemplate: JobTemplate | null;
   setSelectedTemplate: (template: JobTemplate | null) => void;
   onTemplateUpdate: () => void;
+  isLoading?: boolean;
 };
 
 export default function JobTemplates({
@@ -41,10 +42,12 @@ export default function JobTemplates({
   selectedTemplate,
   setSelectedTemplate,
   onTemplateUpdate,
+  isLoading = false,
 }: JobTemplatesProps) {
   const user = useAuth();
   const { toast } = useToast();
   const [editingTemplate, setEditingTemplate] = useState<JobTemplate | null>(null);
+  const deleteTemplateMutation = useDeleteTemplate();
 
   const handleDelete = async (templateId: string) => {
     if (!user) {
@@ -55,10 +58,10 @@ export default function JobTemplates({
         });
         return;
     }
+    
     try {
-      await deleteJobTemplate(templateId, user.uid);
-      onTemplateUpdate();
-       toast({
+      await deleteTemplateMutation.mutateAsync({ templateId, userId: user.uid });
+      toast({
         title: "Plantilla eliminada",
         description: "La plantilla de trabajo ha sido eliminada con éxito.",
       });
@@ -66,10 +69,10 @@ export default function JobTemplates({
         setSelectedTemplate(null);
       }
     } catch (error) {
-       toast({
+      toast({
         variant: "destructive",
         title: "Error al eliminar",
-        description: "No se pudo eliminar la plantilla. Por favor, inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "No se pudo eliminar la plantilla.",
       });
     }
   };

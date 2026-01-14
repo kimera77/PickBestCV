@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, WandSparkles } from "lucide-react";
-import { performCvAnalysis, type FormState } from "@/lib/actions";
+import { performCvAnalysis, type CvAnalysisFormState } from "@/lib/ai/actions";
 import { useToast } from "@/hooks/use-toast";
 import CvUpload from "./cv-upload";
 import AnalysisResults from "./analysis-results";
@@ -17,7 +17,7 @@ type CvAnalysisProps = {
   selectedTemplate: JobTemplate | null;
 };
 
-const initialState: FormState = {
+const initialState: CvAnalysisFormState = {
   message: "",
   analysis: null,
 };
@@ -105,7 +105,7 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
             )}
         </form>
 
-        <AnalysisResults result={formState.analysis} isLoading={useFormStatus().pending} />
+        <AnalysisResults result={formState.analysis ?? null} isLoading={useFormStatus().pending} />
     </div>
   );
 }
