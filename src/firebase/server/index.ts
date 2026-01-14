@@ -1,5 +1,5 @@
 import "server-only";
-import { initializeApp, getApps, getApp, App } from "firebase-admin/app";
+import { initializeApp, getApps, getApp, App, cert, ServiceAccount } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
@@ -7,13 +7,23 @@ let _app: App | null = null;
 let _firestore: Firestore | null = null;
 
 export async function getAdminApp() {
-  const apps = getApps();
-  if (apps.length > 0) {
-    return apps[0]!;
+  if (getApps().length > 0) {
+    return getApps()[0]!;
   }
 
-  if (!_app) {
-    // Inicialización limpia para entornos de servidor
+  // Check if the service account key is available in environment variables
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+      _app = initializeApp({
+        credential: cert(serviceAccount),
+      });
+    } catch (e) {
+      console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT:", e);
+      throw new Error("Could not initialize Firebase Admin SDK with service account.");
+    }
+  } else {
+    // Otherwise, use application default credentials in production
     _app = initializeApp();
   }
 
