@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getAdminFirestore } from "@/firebase/server";
 import { revalidatePath } from "next/cache";
 import type { JobTemplate } from "../types";
+import { requireAuth } from "../auth/actions";
+import { AppError, ErrorCodes, logError } from "../errors";
 
 const TemplateSchema = z.object({
   title: z.string().min(1, "El título es obligatorio."),
@@ -20,66 +22,134 @@ const TemplateUpdateSchema = z.object({
 });
 
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
-  const validatedData = TemplateSchema.parse(data);
-  const firestore = await getAdminFirestore();
-  // Using a root collection for debugging as per user's suggestion
-  const collectionRef = firestore.collection(`jobPositionTemplates`);
-
   try {
+    // Require authentication and get verified user
+    const user = await requireAuth();
+    
+    // Always use server-verified userId, never trust client
+    const validatedData = TemplateSchema.parse({
+      ...data,
+      userId: user.uid,
+    });
+    
+    const firestore = await getAdminFirestore();
+    const collectionRef = firestore.collection(`jobPositionTemplates`);
+
     await collectionRef.add({
       title: validatedData.title,
       description: validatedData.description,
       userId: validatedData.userId,
       createdAt: new Date(),
     });
-  } catch (error) {
-    console.error("Error creating job template:", error);
-    // Re-throw or handle as needed
-    throw error;
-  }
 
-  revalidatePath("/dashboard");
+    revalidatePath("/dashboard");
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logError(error, { action: 'createJobTemplate', data });
+    throw new AppError(
+      'Error al crear la plantilla',
+      ErrorCodes.TEMPLATE_CREATE_FAILED,
+      500,
+      error
+    );
+  }
 }
 
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
+  try {
+    // Require authentication and get verified user
+    const user = await requireAuth();
+    
     const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
     const firestore = await getAdminFirestore();
-    // Using a root collection for debugging
     const templateRef = firestore.doc(`jobPositionTemplates/${id}`);
     
-    // Ensure we don't try to update userId or id in the document data itself
+    // Verify ownership before updating
+    const doc = await templateRef.get();
+    if (!doc.exists) {
+      throw new AppError('Plantilla no encontrada', ErrorCodes.NOT_FOUND, 404);
+    }
+    
+    const templateData = doc.data();
+    if (templateData?.userId !== user.uid) {
+      throw new AppError(
+        'No tienes permiso para actualizar esta plantilla',
+        ErrorCodes.FORBIDDEN,
+        403
+      );
+    }
+    
+    // Only update allowed fields
     const updateData = { 
-        title: validatedData.title,
-        description: validatedData.description 
+      title: validatedData.title,
+      description: validatedData.description,
+      updatedAt: new Date(),
     };
 
-    try {
-      await templateRef.update(updateData);
-    } catch(error) {
-      console.error("Error updating job template:", error);
+    await templateRef.update(updateData);
+    revalidatePath("/dashboard");
+  } catch (error) {
+    if (error instanceof AppError) {
       throw error;
     }
-
-    revalidatePath("/dashboard");
+    logError(error, { action: 'updateJobTemplate', data });
+    throw new AppError(
+      'Error al actualizar la plantilla',
+      ErrorCodes.TEMPLATE_UPDATE_FAILED,
+      500,
+      error
+    );
+  }
 }
 
 export async function deleteJobTemplate(templateId: string, userId: string) {
-    if (!userId) {
-        throw new Error("No autenticado");
-    }
+  try {
+    // Require authentication and get verified user
+    const user = await requireAuth();
+    
     const firestore = await getAdminFirestore();
-    // Using a root collection for debugging
     const templateRef = firestore.doc(`jobPositionTemplates/${templateId}`);
     
-    try {
-      // We might add a check here in a real app to ensure the user owns the template before deleting
-      await templateRef.delete();
-    } catch(error) {
-       console.error("Error deleting job template:", error);
-       throw error;
+    // Verify ownership before deleting
+    const doc = await templateRef.get();
+    if (!doc.exists) {
+      throw new AppError('Plantilla no encontrada', ErrorCodes.NOT_FOUND, 404);
+    }
+    
+    const templateData = doc.data();
+    if (templateData?.userId !== user.uid) {
+      throw new AppError(
+        'No tienes permiso para eliminar esta plantilla',
+        ErrorCodes.FORBIDDEN,
+        403
+      );
+    }
+    
+    // Prevent deletion of default templates
+    if (templateData?.userId === 'default') {
+      throw new AppError(
+        'No se pueden eliminar las plantillas por defecto',
+        ErrorCodes.FORBIDDEN,
+        403
+      );
     }
 
+    await templateRef.delete();
     revalidatePath("/dashboard");
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logError(error, { action: 'deleteJobTemplate', templateId, userId });
+    throw new AppError(
+      'Error al eliminar la plantilla',
+      ErrorCodes.TEMPLATE_DELETE_FAILED,
+      500,
+      error
+    );
+  }
 }
 
 
@@ -144,18 +214,22 @@ Requisitos:
 ];
 
 export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
-  // If user is not logged in (anonymous), just show defaults
-  if (!userId || userId === 'default') {
-    return defaultTemplates;
-  }
-  
-  const firestore = await getAdminFirestore();
-  // Querying the root collection
-  const collectionRef = firestore.collection(`jobPositionTemplates`);
-  
   try {
-    // We fetch templates created by the specific user OR the default ones.
-    const querySnapshot = await collectionRef.where('userId', 'in', [userId, 'default']).orderBy("createdAt", "desc").get();
+    // If user is not logged in (anonymous), just show defaults
+    if (!userId || userId === 'default') {
+      return defaultTemplates;
+    }
+    
+    const firestore = await getAdminFirestore();
+    const collectionRef = firestore.collection(`jobPositionTemplates`);
+    
+    // Only fetch templates owned by the user OR default ones
+    // This ensures users can only see their own templates + defaults
+    const querySnapshot = await collectionRef
+      .where('userId', 'in', [userId, 'default'])
+      .orderBy("createdAt", "desc")
+      .get();
+    
     const userTemplates: JobTemplate[] = [];
     
     querySnapshot.forEach((doc) => {
@@ -175,7 +249,7 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
     return uniqueTemplates.sort((a, b) => (b.createdAt || 0) > (a.createdAt || 0) ? 1 : -1);
 
   } catch (error) {
-    console.error("Permission or other error fetching templates:", error);
+    logError(error, { action: 'getJobTemplates', userId });
     // On error, return default templates as a safe fallback
     return defaultTemplates;
   }

@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { CandidateMatch } from "@/lib/types";
 import { analyzeSingleCv } from "@/ai/flows/analyze-single-cv";
 import { extractTextFromPdf } from "@/ai/flows/extract-text-from-pdf";
+import { logError } from "@/lib/errors";
 
 // --- CV ANALYSIS ACTIONS ---
 
@@ -83,7 +84,7 @@ export async function performCvAnalysis(
       analysis: { candidateMatches: sortedResults },
     };
   } catch (e) {
-    console.error(e);
+    logError(e, { action: 'analyzeCvs' });
     return {
       message: "Ocurrió un error durante el análisis.",
       errors: {
@@ -111,7 +112,8 @@ export async function extractTextFromPdfAction(
 
   const validatedFile = PdfFileSchema.safeParse(file);
   if (!validatedFile.success) {
-    return { error: validatedFile.error.flatten().fieldErrors.root?.join(", ") || "Archivo no válido." };
+    const errors = validatedFile.error.flatten();
+    return { error: errors.formErrors.join(", ") || "Archivo no válido." };
   }
 
   try {
@@ -119,7 +121,7 @@ export async function extractTextFromPdfAction(
     const result = await extractTextFromPdf({ pdf: pdfDataUri });
     return { text: result.extractedText };
   } catch (e) {
-    console.error(e);
+    logError(e, { action: 'extractTextFromPdfAction' });
     return { error: "No se pudo extraer el texto del PDF." };
   }
 }

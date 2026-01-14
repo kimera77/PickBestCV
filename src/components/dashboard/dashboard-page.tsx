@@ -1,45 +1,36 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { JobTemplate } from "@/lib/types";
 import JobTemplates from "./job-templates";
 import CvAnalysis from "./cv-analysis";
-import { getJobTemplates } from "@/lib/actions";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { useJobTemplates } from "@/hooks/use-templates";
 
 type DashboardPageClientProps = {
   initialTemplates: JobTemplate[];
 }
 
 export default function DashboardPageClient({ initialTemplates }: DashboardPageClientProps) {
-  const [templates, setTemplates] = useState<JobTemplate[]>(initialTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
   const user = useAuth();
+  
+  // Get userId for queries
+  const userId = user && !user.isAnonymous ? user.uid : undefined;
+  
+  // Use React Query to fetch templates
+  const { data: templates = initialTemplates, isLoading, refetch } = useJobTemplates(userId);
 
-
-  const refreshTemplates = useCallback(async () => {
-    if (user === undefined) return; // Still loading
-
-    // If user is anonymous or not logged in, get default templates.
-    // Otherwise, get user-specific templates.
-    const userId = (user && !user.isAnonymous) ? user.uid : undefined;
-    const freshTemplates = await getJobTemplates(userId);
-
-    setTemplates(freshTemplates);
-    
-    // If there was no selected template, or the selected one was deleted,
-    // select the first one from the fresh list.
-    if ((!selectedTemplate || !freshTemplates.find(t => t.id === selectedTemplate.id)) && freshTemplates.length > 0) {
-      setSelectedTemplate(freshTemplates[0]);
-    } else if (freshTemplates.length === 0) {
-      setSelectedTemplate(null);
-    }
-  }, [selectedTemplate, user]);
-
-  // Fetch templates on initial mount
+  // Update selected template when templates change
   useEffect(() => {
-    refreshTemplates();
-  }, [refreshTemplates]); 
+    if (!selectedTemplate && templates.length > 0) {
+      // No template selected, select the first one
+      setSelectedTemplate(templates[0]);
+    } else if (selectedTemplate && !templates.find(t => t.id === selectedTemplate.id)) {
+      // Selected template was deleted, select first available or null
+      setSelectedTemplate(templates.length > 0 ? templates[0] : null);
+    }
+  }, [templates, selectedTemplate]);
   
   return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -48,7 +39,8 @@ export default function DashboardPageClient({ initialTemplates }: DashboardPageC
                   templates={templates}
                   selectedTemplate={selectedTemplate}
                   setSelectedTemplate={setSelectedTemplate}
-                  onTemplateUpdate={refreshTemplates}
+                  onTemplateUpdate={refetch}
+                  isLoading={isLoading}
               />
           </div>
           <div className="lg:col-span-2">

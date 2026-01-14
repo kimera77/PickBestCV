@@ -18,9 +18,11 @@ import { Textarea } from "@/components/ui/textarea";
 import type { JobTemplate } from "@/lib/types";
 import { PlusCircle, Loader2, Save, Upload, WandSparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createJobTemplate, updateJobTemplate, extractTextFromPdfAction } from "@/lib/actions";
+import { extractTextFromPdfAction } from "@/lib/actions";
 import * as pdfjsLib from 'pdfjs-dist';
 import { useAuth } from "@/lib/auth/auth-provider";
+import { useCreateTemplate, useUpdateTemplate } from "@/hooks/use-templates";
+import { logError } from "@/lib/errors";
 
 // Configure the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -42,14 +44,18 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionMethod, setExtractionMethod] = useState<'ai' | 'local' | null>(null);
 
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // React Query mutations
+  const createTemplateMutation = useCreateTemplate();
+  const updateTemplateMutation = useUpdateTemplate();
 
   const isEditing = !!templateToEdit;
+  const isSaving = createTemplateMutation.isPending || updateTemplateMutation.isPending;
 
   useEffect(() => {
     if (isEditing && open) {
@@ -72,13 +78,20 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
         return;
     }
 
-
-    setIsSaving(true);
     try {
       if (isEditing) {
-        await updateJobTemplate({ id: templateToEdit.id, title, description, userId: user.uid });
+        await updateTemplateMutation.mutateAsync({ 
+          id: templateToEdit.id, 
+          title, 
+          description, 
+          userId: user.uid 
+        });
       } else {
-        await createJobTemplate({ title, description, userId: user.uid });
+        await createTemplateMutation.mutateAsync({ 
+          title, 
+          description, 
+          userId: user.uid 
+        });
       }
       onTemplateSaved();
       toast({
@@ -87,14 +100,11 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
       });
       setOpen(false);
     } catch (error) {
-      console.error(error);
       toast({
         variant: "destructive",
         title: "Error al guardar",
-        description: `No se pudo ${isEditing ? 'actualizar' : 'crear'} la plantilla. Por favor, inténtalo de nuevo.`,
+        description: error instanceof Error ? error.message : `No se pudo ${isEditing ? 'actualizar' : 'crear'} la plantilla.`,
       });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -179,7 +189,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
             description: "La descripción del trabajo se ha rellenado con el contenido del PDF.",
         });
     } catch (error) {
-        console.error(error);
+        logError(error, { action: 'handlePdfUpload', extractionMethod });
         toast({
             variant: "destructive",
             title: "Error de extracción",
