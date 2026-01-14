@@ -32,8 +32,8 @@ service cloud.firestore {
     }
 
     match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
-      allow read: if isSignedIn(); // Allow any signed-in user to read templates
-      allow create, update, delete: if isSignedIn() && isOwner(userId);
+      allow read, create: if isSignedIn();
+      allow update, delete: if isSignedIn() && isOwner(userId);
     }
     
     match /users/{userId}/cvs/{cvId} {
