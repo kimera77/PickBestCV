@@ -1,38 +1,40 @@
-// ELIMINA "use server" de la primera línea.
 import "server-only";
-import * as admin from "firebase-admin";
+import { initializeApp, getApps, getApp, App } from "firebase-admin/app";
+import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
-let _app: admin.app.App | null = null;
+let _app: App | null = null;
+let _firestore: Firestore | null = null;
 
 export async function getAdminApp() {
-  // Comprobamos si ya existe una app para evitar re-inicializar en cada recarga (HMR)
-  if (admin.apps.length > 0) {
-    return admin.apps[0]!;
+  const apps = getApps();
+  if (apps.length > 0) {
+    return apps[0]!;
   }
 
   if (!_app) {
-    _app = admin.initializeApp({
-      // Si estás en local, asegúrate de tener las credenciales configuradas
-      // o añade aquí explícitamente el credential: admin.credential.cert(...)
-    });
+    // Inicialización limpia para entornos de servidor
+    _app = initializeApp();
   }
-  
+
   return _app;
 }
-
+ 
 export async function getAdminFirestore() {
+  if (_firestore) return _firestore;
+  
   const app = await getAdminApp();
-  return admin.firestore(app);
+  _firestore = getFirestore(app);
+  return _firestore;
 }
 
-
 export async function verifySessionCookie(sessionCookie: string) {
-    try {
-        const adminAuth = (await getAdminApp()).auth();
-        const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-        return decodedClaims;
-    } catch (error) {
-        console.error("Error verifying session cookie", error);
-        return null;
-    }
+  try {
+    const app = await getAdminApp();
+    const auth = getAuth(app);
+    return await auth.verifySessionCookie(sessionCookie, true);
+  } catch (error) {
+    console.error("Error verifying session cookie", error);
+    return null;
+  }
 }
