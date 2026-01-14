@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -21,7 +22,7 @@ const TemplateUpdateSchema = z.object({
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   const validatedData = TemplateSchema.parse(data);
   const firestore = await getAdminFirestore();
-  const collectionRef = firestore.collection(`users/${validatedData.userId}/jobTemplates`);
+  const collectionRef = firestore.collection(`users/${validatedData.userId}/jobPositionTemplates`);
 
   try {
     await collectionRef.add({
@@ -42,7 +43,7 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
     const { id, userId, ...validatedData } = TemplateUpdateSchema.parse(data);
     const firestore = await getAdminFirestore();
-    const templateRef = firestore.doc(`users/${userId}/jobTemplates/${id}`);
+    const templateRef = firestore.doc(`users/${userId}/jobPositionTemplates/${id}`);
     
     const updateData = { ...validatedData };
 
@@ -61,7 +62,7 @@ export async function deleteJobTemplate(templateId: string, userId: string) {
         throw new Error("No autenticado");
     }
     const firestore = await getAdminFirestore();
-    const templateRef = firestore.doc(`users/${userId}/jobTemplates/${templateId}`);
+    const templateRef = firestore.doc(`users/${userId}/jobPositionTemplates/${templateId}`);
     
     try {
       await templateRef.delete();
@@ -140,7 +141,7 @@ export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
   }
   
   const firestore = await getAdminFirestore();
-  const collectionRef = firestore.collection(`users/${userId}/jobTemplates`);
+  const collectionRef = firestore.collection(`users/${userId}/jobPositionTemplates`);
   
   try {
     const querySnapshot = await collectionRef.orderBy("createdAt", "desc").get();
