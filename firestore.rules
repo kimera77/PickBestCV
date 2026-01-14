@@ -1,3 +1,4 @@
+
 /**
  * @file Firebase Security Rules for CV Match Pro.
  *
@@ -31,7 +32,8 @@ service cloud.firestore {
       allow list: if false; // Explicitly disallow listing all users
     }
 
-    match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
+    // Simplified rule for debugging: Allow any signed-in user to r/w the root collection.
+    match /jobPositionTemplates/{jobPositionTemplateId} {
       allow read, write: if isSignedIn();
     }
     

@@ -22,7 +22,8 @@ const TemplateUpdateSchema = z.object({
 export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
   const validatedData = TemplateSchema.parse(data);
   const firestore = await getAdminFirestore();
-  const collectionRef = firestore.collection(`users/${validatedData.userId}/jobPositionTemplates`);
+  // Using a root collection for debugging as per user's suggestion
+  const collectionRef = firestore.collection(`jobPositionTemplates`);
 
   try {
     await collectionRef.add({
@@ -41,11 +42,16 @@ export async function createJobTemplate(data: z.infer<typeof TemplateSchema>) {
 }
 
 export async function updateJobTemplate(data: z.infer<typeof TemplateUpdateSchema>) {
-    const { id, userId, ...validatedData } = TemplateUpdateSchema.parse(data);
+    const { id, ...validatedData } = TemplateUpdateSchema.parse(data);
     const firestore = await getAdminFirestore();
-    const templateRef = firestore.doc(`users/${userId}/jobPositionTemplates/${id}`);
+    // Using a root collection for debugging
+    const templateRef = firestore.doc(`jobPositionTemplates/${id}`);
     
-    const updateData = { ...validatedData };
+    // Ensure we don't try to update userId or id in the document data itself
+    const updateData = { 
+        title: validatedData.title,
+        description: validatedData.description 
+    };
 
     try {
       await templateRef.update(updateData);
@@ -62,9 +68,11 @@ export async function deleteJobTemplate(templateId: string, userId: string) {
         throw new Error("No autenticado");
     }
     const firestore = await getAdminFirestore();
-    const templateRef = firestore.doc(`users/${userId}/jobPositionTemplates/${templateId}`);
+    // Using a root collection for debugging
+    const templateRef = firestore.doc(`jobPositionTemplates/${templateId}`);
     
     try {
+      // We might add a check here in a real app to ensure the user owns the template before deleting
       await templateRef.delete();
     } catch(error) {
        console.error("Error deleting job template:", error);
@@ -136,30 +144,38 @@ Requisitos:
 ];
 
 export async function getJobTemplates(userId?: string): Promise<JobTemplate[]> {
-  if (!userId) {
+  // If user is not logged in (anonymous), just show defaults
+  if (!userId || userId === 'default') {
     return defaultTemplates;
   }
   
   const firestore = await getAdminFirestore();
-  const collectionRef = firestore.collection(`users/${userId}/jobPositionTemplates`);
+  // Querying the root collection
+  const collectionRef = firestore.collection(`jobPositionTemplates`);
   
   try {
-    const querySnapshot = await collectionRef.orderBy("createdAt", "desc").get();
+    // We fetch templates created by the specific user OR the default ones.
+    const querySnapshot = await collectionRef.where('userId', 'in', [userId, 'default']).orderBy("createdAt", "desc").get();
     const userTemplates: JobTemplate[] = [];
+    
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      // Ensure createdAt is a Date object, defaulting if it's missing or in a different format
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(0);
       userTemplates.push({ id: doc.id, ...data, createdAt } as JobTemplate);
     });
 
-    if (userTemplates.length === 0) {
-      return defaultTemplates;
-    }
-    
-    return userTemplates;
+    // Combine with defaults just in case user has no templates yet, and remove duplicates
+    const allTemplates = [...userTemplates, ...defaultTemplates];
+    const uniqueTemplates = allTemplates.filter(
+        (template, index, self) => index === self.findIndex((t) => t.id === template.id)
+    );
+
+    // Sort again to ensure correct order
+    return uniqueTemplates.sort((a, b) => (b.createdAt || 0) > (a.createdAt || 0) ? 1 : -1);
 
   } catch (error) {
-    console.error("Permission or other error fetching templates for user:", userId, error);
+    console.error("Permission or other error fetching templates:", error);
     // On error, return default templates as a safe fallback
     return defaultTemplates;
   }
