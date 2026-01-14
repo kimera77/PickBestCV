@@ -32,16 +32,15 @@ service cloud.firestore {
     }
 
     match /users/{userId}/jobPositionTemplates/{jobPositionTemplateId} {
-      allow read, create: if isSignedIn();
-      allow update, delete: if isSignedIn() && isOwner(userId);
+      allow read, write: if isSignedIn();
     }
     
     match /users/{userId}/cvs/{cvId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+      allow read, write: if isSignedIn();
     }
 
     match /users/{userId}/analysisResults/{analysisResultId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+      allow read, write: if isSignedIn();
     }
   }
 }
