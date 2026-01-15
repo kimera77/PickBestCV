@@ -40,6 +40,9 @@ next-env.d.ts
 .genkit/*
 .env*
 
+# Archivos temporales con credenciales hardcodeadas
+*-hardcoded.ts
+
 # firebase
 firebase-debug.log
 firestore-debug.log

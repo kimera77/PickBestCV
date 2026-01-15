@@ -1,6 +1,6 @@
 'use client';
 
-import { firebaseConfig } from '@/firebase/client/config';
+import { firebaseConfig, validateFirebaseConfig } from '@/firebase/client/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
@@ -22,7 +22,18 @@ export function initializeFirebase() {
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
-      firebaseApp = initializeApp(firebaseConfig);
+      
+      try {
+        // Validar la configuración antes de intentar inicializar
+        validateFirebaseConfig();
+        
+        // Intentar inicializar con la configuración local
+        firebaseApp = initializeApp(firebaseConfig);
+      } catch (configError) {
+        // Si falla la configuración, mostrar un error claro
+        console.error('Error al inicializar Firebase:', configError);
+        throw configError;
+      }
     }
 
     return getSdks(firebaseApp);
