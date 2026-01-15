@@ -85,7 +85,7 @@ export default function LoginPage() {
   const onAnonymousSubmit = async () => {
     setError(null);
     setAnonymousLoading(true);
-    try {
+    try { 
       console.log('🔵 Iniciando login anónimo...');
       const result = await clientHandleAnonymousSignIn();
       console.log('✅ Login anónimo exitoso:', result);
