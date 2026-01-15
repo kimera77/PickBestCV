@@ -49,6 +49,10 @@ function getFirebaseErrorMessage(errorCode: string): string {
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
             return 'Correo electrónico o contraseña incorrectos.';
+        case 'auth/invalid-api-key':
+            return 'Error de configuración de Firebase. Verifica las variables de entorno.';
+        case 'unknown':
+            return 'Error de conexión. Verifica tu configuración de Firebase.';
         default:
             return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
     }

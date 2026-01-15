@@ -1,11 +1,19 @@
 "use client";
 
 import React, { createContext, useContext, type PropsWithChildren, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, type User, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, type User, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword, type Auth } from 'firebase/auth';
 import { initializeFirebase } from '@/firebase/client';
 
-// Initialize firebase and auth
-const { auth } = initializeFirebase();
+// Lazy initialization of Firebase
+let authInstance: Auth | null = null;
+
+function getAuthInstance(): Auth {
+  if (!authInstance) {
+    const { auth } = initializeFirebase();
+    authInstance = auth;
+  }
+  return authInstance;
+}
 
 // The context can hold User, null (logged out), or undefined (initial loading state)
 type AuthContextType = User | null | undefined;
@@ -17,6 +25,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     console.log('🔧 AuthProvider montado, configurando listener...');
+    const auth = getAuthInstance();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
        console.log('🔔 Auth state changed:', firebaseUser ? `Usuario: ${firebaseUser.uid}` : 'Sin usuario');
        // When using emulators, onAuthStateChanged can fire before the token is propagated to the server,
@@ -47,7 +56,7 @@ export const useAuth = () => {
 };
 
 // Client-side auth actions that components can call
-export const clientHandleSignIn = (email: string, password: string) => signInWithEmailAndPassword(auth, email, password);
-export const clientHandleSignUp = (email: string, password: string) => createUserWithEmailAndPassword(auth, email, password);
-export const clientHandleAnonymousSignIn = () => signInAnonymously(auth);
-export const clientHandleSignOut = () => auth.signOut();
+export const clientHandleSignIn = (email: string, password: string) => signInWithEmailAndPassword(getAuthInstance(), email, password);
+export const clientHandleSignUp = (email: string, password: string) => createUserWithEmailAndPassword(getAuthInstance(), email, password);
+export const clientHandleAnonymousSignIn = () => signInAnonymously(getAuthInstance());
+export const clientHandleSignOut = () => getAuthInstance().signOut();

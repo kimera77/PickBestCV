@@ -11,36 +11,30 @@ export default function DashboardPageGuard({ children }: { children: React.React
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
-    console.log('🛡️ DashboardPageGuard - Estado del usuario:', user === undefined ? 'undefined (cargando)' : user === null ? 'null (sin autenticar)' : `autenticado: ${user.uid}`);
+    // user is undefined = still loading
+    // user is null = not authenticated
+    // user is object = authenticated
     
-    // We need to wait for the initial auth state to be determined.
-    // The useAuth hook might return null initially while it's loading.
-    // If we don't wait, we might redirect unecessarily.
-    // A better approach in a real app might involve a global loading state.
-    const timer = setTimeout(() => {
-        if (user === undefined) {
-          // Still loading, do nothing yet. The effect will re-run when user changes.
-          console.log('⏳ Esperando estado de auth...');
-          return;
-        }
+    if (user === undefined) {
+      // Still loading, show spinner
+      setIsVerifying(true);
+      return;
+    }
 
-        if (user === null) {
-          console.log('❌ Usuario no autenticado, redirigiendo a login');
-          router.push('/login');
-        } else {
-          console.log('✅ Usuario autenticado, mostrando dashboard');
-          setIsVerifying(false);
-        }
-    }, 500); // Give a moment for the auth state to settle.
-
-    return () => clearTimeout(timer);
-
+    if (user === null) {
+      // Not authenticated, redirect to login
+      router.push('/login');
+    } else {
+      // Authenticated, show dashboard
+      setIsVerifying(false);
+    }
   }, [user, router]);
 
-  if (isVerifying) {
+  if (isVerifying || user === undefined) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Cargando...</p>
       </div>
     );
   }

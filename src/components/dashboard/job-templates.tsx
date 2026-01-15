@@ -96,7 +96,14 @@ export default function JobTemplates({
       </CardHeader>
       <CardContent className="flex-1 overflow-auto">
         <div className="space-y-4">
-            {templates.length === 0 ? (
+            {isLoading ? (
+                <div className="text-center text-muted-foreground py-8">
+                    <div className="flex items-center justify-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                        <span>Cargando plantillas...</span>
+                    </div>
+                </div>
+            ) : templates.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                     Aún no se han creado plantillas.
                 </div>
