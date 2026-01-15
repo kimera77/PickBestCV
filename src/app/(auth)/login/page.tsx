@@ -82,10 +82,15 @@ export default function LoginPage() {
     setError(null);
     setAnonymousLoading(true);
     try {
-      await clientHandleAnonymousSignIn();
+      console.log('🔵 Iniciando login anónimo...');
+      const result = await clientHandleAnonymousSignIn();
+      console.log('✅ Login anónimo exitoso:', result);
+      console.log('🔄 Redirigiendo a dashboard...');
       router.push("/dashboard");
     } catch (e: any) {
-      setError(getFirebaseErrorMessage(e.code));
+      console.error('❌ Error en login anónimo:', e);
+      const errorCode = e?.code || 'unknown';
+      setError(getFirebaseErrorMessage(errorCode));
       setAnonymousLoading(false);
     }
   };

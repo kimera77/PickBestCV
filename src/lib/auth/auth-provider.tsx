@@ -16,13 +16,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<AuthContextType>(undefined);
 
   useEffect(() => {
+    console.log('🔧 AuthProvider montado, configurando listener...');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+       console.log('🔔 Auth state changed:', firebaseUser ? `Usuario: ${firebaseUser.uid}` : 'Sin usuario');
        // When using emulators, onAuthStateChanged can fire before the token is propagated to the server,
        // causing server-side checks to fail. We force a token refresh to mitigate this.
        if (firebaseUser) {
            await firebaseUser.getIdToken(true);
        }
        setUser(firebaseUser);
+       console.log('✅ Estado de usuario actualizado en contexto');
     });
 
     // Cleanup subscription on unmount

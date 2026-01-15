@@ -26,12 +26,16 @@ const TemplateUpdateSchema = z.object({
 /**
  * Hook to fetch job templates for a user
  */
-export function useJobTemplates(userId?: string) {
+export function useJobTemplates(userId: string = 'guest') {
   return useQuery({
     queryKey: ['jobTemplates', userId],
-    queryFn: () => getJobTemplates(userId),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: userId !== undefined, // Only fetch when we have a userId
+    queryFn: async () => {
+      console.log('🔍 Fetching templates for userId:', userId);
+      const result = await getJobTemplates(userId);
+      console.log('✅ Templates fetched:', result.length, 'templates');
+      return result;
+    },
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
 
@@ -43,9 +47,15 @@ export function useCreateTemplate() {
   
   return useMutation({
     mutationFn: (data: z.infer<typeof TemplateSchema>) => createJobTemplate(data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      console.log('🔄 Template created successfully, invalidating cache...');
       // Invalidate and refetch templates after creating
-      queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
+      await queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
+      await queryClient.refetchQueries({ queryKey: ['jobTemplates'] });
+      console.log('✅ Cache invalidated and refetched');
+    },
+    onError: (error) => {
+      console.error('❌ Error creating template:', error);
     },
   });
 }
@@ -58,9 +68,13 @@ export function useUpdateTemplate() {
   
   return useMutation({
     mutationFn: (data: z.infer<typeof TemplateUpdateSchema>) => updateJobTemplate(data),
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate and refetch templates after updating
-      queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
+      await queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
+      await queryClient.refetchQueries({ queryKey: ['jobTemplates'] });
+    },
+    onError: (error) => {
+      console.error('Error updating template:', error);
     },
   });
 }

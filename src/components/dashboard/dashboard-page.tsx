@@ -15,11 +15,20 @@ export default function DashboardPageClient({ initialTemplates }: DashboardPageC
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
   const user = useAuth();
   
-  // Get userId for queries
-  const userId = user && !user.isAnonymous ? user.uid : undefined;
+  // Get userId for queries - use 'guest' for non-authenticated users
+  const userId = user && !user.isAnonymous ? user.uid : 'guest';
+  
+  console.log('🎯 DashboardPageClient RENDER');
+  console.log('👤 user:', user);
+  console.log('🔑 userId:', userId);
+  console.log('📦 initialTemplates:', initialTemplates);
   
   // Use React Query to fetch templates
   const { data: templates = initialTemplates, isLoading, refetch } = useJobTemplates(userId);
+  
+  console.log('📚 templates from React Query:', templates);
+  console.log('📊 templates.length:', templates?.length);
+  console.log('⏳ isLoading:', isLoading);
 
   // Update selected template when templates change
   useEffect(() => {

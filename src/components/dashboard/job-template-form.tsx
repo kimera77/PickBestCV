@@ -69,14 +69,11 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
 
   const handleSave = async () => {
     if (!title || !description) return;
-    if (!user) {
-        toast({
-            variant: "destructive",
-            title: "Error de autenticación",
-            description: "Debes iniciar sesión para guardar una plantilla.",
-        });
-        return;
-    }
+    
+    // Use 'guest' for non-authenticated users, otherwise use real uid
+    const userId = user && !user.isAnonymous ? user.uid : 'guest';
+    
+    console.log('💾 Saving template with userId:', userId);
 
     try {
       if (isEditing) {
@@ -84,13 +81,13 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
           id: templateToEdit.id, 
           title, 
           description, 
-          userId: user.uid 
+          userId 
         });
       } else {
         await createTemplateMutation.mutateAsync({ 
           title, 
           description, 
-          userId: user.uid 
+          userId 
         });
       }
       onTemplateSaved();
