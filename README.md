@@ -2,6 +2,8 @@
 
 Aplicación Next.js para análisis automatizado de currículums utilizando IA de Google Gemini y Firebase.
 
+<img src="evi1.png" width="30%"> <img src="evi2.png" width="70%">
+
 ## 🚀 Características
 
 - **Análisis de CVs con IA**: Utiliza Google Gemini para evaluar candidatos automáticamente
