@@ -17,7 +17,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Protected routes (dashboard and any other authenticated routes)
+  // TEMPORAL: Allow dashboard access without session cookie
+  // Firebase Auth is client-side only for now
+  // TODO: Implement proper session cookies with Firebase Auth
+  return NextResponse.next();
+  
+  /* Protected routes - DISABLED for now
   const sessionCookie = request.cookies.get("session")?.value;
   
   // If no session cookie, redirect to login
@@ -31,6 +36,7 @@ export async function middleware(request: NextRequest) {
   // Session cookie exists, allow access
   // Note: Full validation happens in server components/actions for security
   return NextResponse.next();
+  */
 }
 
 export const config = {
