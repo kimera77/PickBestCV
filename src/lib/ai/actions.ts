@@ -44,11 +44,43 @@ async function fileToDataURI(file: File): Promise<string> {
 }
 
 
+// Constants for validation
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_CVS = 20;
+const ANALYSIS_TIMEOUT = 30000; // 30 seconds per CV
+
 export async function performCvAnalysis(
   prevState: CvAnalysisFormState,
   formData: FormData
 ): Promise<CvAnalysisFormState> {
+  console.log('🚀 Starting CV analysis...');
+  
   const cvFiles = formData.getAll("cvs") as File[];
+  
+  // Validate number of CVs
+  if (cvFiles.length > MAX_CVS) {
+    return {
+      message: `Solo se pueden analizar hasta ${MAX_CVS} CVs a la vez.`,
+      errors: {
+        cvs: [`Máximo ${MAX_CVS} CVs permitidos. Has subido ${cvFiles.length}.`],
+      },
+      analysis: null,
+    };
+  }
+  
+  // Validate file sizes
+  for (const file of cvFiles) {
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        message: "Uno o más archivos exceden el tamaño máximo permitido.",
+        errors: {
+          cvs: [`El archivo "${file.name}" es demasiado grande. Máximo: 10MB`],
+        },
+        analysis: null,
+      };
+    }
+  }
+  
   const validatedFields = CvAnalysisFormSchema.safeParse({
     jobDescription: formData.get("jobDescription"),
     cvs: cvFiles,
@@ -56,6 +88,7 @@ export async function performCvAnalysis(
   });
 
   if (!validatedFields.success) {
+    console.error('❌ Validation failed:', validatedFields.error);
     return {
       message: "La validación ha fallado. Por favor, comprueba tus datos.",
       errors: validatedFields.error.flatten().fieldErrors,
@@ -64,37 +97,89 @@ export async function performCvAnalysis(
   }
 
   const { jobDescription, cvs, language } = validatedFields.data;
+  console.log(`📊 Analyzing ${cvs.length} CVs for job: ${jobDescription.substring(0, 50)}...`);
 
-  try {
-    const analysisPromises = cvs.map(async (file) => {
-        const cvDataUri = await fileToDataURI(file);
-        const result = await analyzeSingleCv({
+  const results: any[] = [];
+  const errors: string[] = [];
+
+  // Process CVs sequentially to avoid overwhelming the API
+  for (let i = 0; i < cvs.length; i++) {
+    const file = cvs[i];
+    console.log(`📄 Processing CV ${i + 1}/${cvs.length}: ${file.name}`);
+    
+    try {
+      const startTime = Date.now();
+      
+      // Convert file to data URI
+      const cvDataUri = await fileToDataURI(file);
+      
+      // Analyze with timeout
+      const result = await Promise.race([
+        analyzeSingleCv({
           jobDescription,
           cv: cvDataUri,
-          language: language,
-        });
-        return { ...result, cv: file.name };
-    });
+          language: language || 'es',
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), ANALYSIS_TIMEOUT)
+        )
+      ]) as any;
+      
+      const elapsed = Date.now() - startTime;
+      console.log(`✅ CV ${i + 1} analyzed in ${elapsed}ms: ${result.candidateName} - Score: ${result.matchScore}`);
+      
+      results.push({ ...result, cv: file.name });
+    } catch (e: any) {
+      const errorMsg = e?.message || 'Error desconocido';
+      console.error(`❌ Error analyzing CV ${i + 1} (${file.name}):`, e);
+      
+      logError(e, { action: 'analyzeSingleCv', fileName: file.name, cvIndex: i });
+      
+      // Add a failed result with error info
+      results.push({
+        cv: file.name,
+        candidateName: `Error: ${file.name}`,
+        matchScore: 0,
+        reasoning: `No se pudo analizar este CV: ${errorMsg}`,
+      });
+      
+      errors.push(`${file.name}: ${errorMsg}`);
+    }
+  }
 
-    const results = await Promise.all(analysisPromises);
-    const sortedResults = results.sort((a, b) => b.matchScore - a.matchScore);
+  // Sort results by match score (highest first)
+  const sortedResults = results.sort((a, b) => b.matchScore - a.matchScore);
+  
+  console.log(`🎯 Analysis complete. Successful: ${results.length - errors.length}/${cvs.length}`);
 
+  // If all CVs failed, return error
+  if (errors.length === cvs.length) {
     return {
-      message: "Análisis exitoso.",
-      analysis: { candidateMatches: sortedResults },
-    };
-  } catch (e) {
-    logError(e, { action: 'analyzeCvs' });
-    return {
-      message: "Ocurrió un error durante el análisis.",
+      message: "No se pudo analizar ningún CV.",
       errors: {
         _form: [
-          "Algo salió mal en el servidor. Por favor, inténtalo de nuevo.",
+          "Todos los CVs fallaron al analizar. Verifica que sean archivos PDF válidos.",
+          ...errors.slice(0, 3), // Show first 3 errors
         ],
       },
       analysis: null,
     };
   }
+
+  // Partial success - show warning if some failed
+  const message = errors.length > 0 
+    ? `Análisis completado con ${errors.length} error(es).`
+    : "Análisis exitoso.";
+
+  return {
+    message,
+    analysis: { candidateMatches: sortedResults },
+    ...(errors.length > 0 && {
+      errors: {
+        _form: [`Algunos CVs no se pudieron analizar: ${errors.join(', ')}`],
+      },
+    }),
+  };
 }
 
 const PdfFileSchema = z

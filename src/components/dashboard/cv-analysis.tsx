@@ -105,7 +105,10 @@ export default function CvAnalysis({ selectedTemplate }: CvAnalysisProps) {
             )}
         </form>
 
-        <AnalysisResults result={formState.analysis ?? null} isLoading={useFormStatus().pending} />
+        <AnalysisResults 
+          result={formState.analysis ?? null} 
+          isLoading={useFormStatus().pending}
+        />
     </div>
   );
 }

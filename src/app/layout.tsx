@@ -10,6 +10,15 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 export const metadata: Metadata = {
   title: 'PickbestCV',
   description: 'Análisis de CV con IA para una contratación inteligente',
+  icons: {
+    icon: [
+      { url: '/icon_pickbestcv.png' },
+      { url: '/icon_pickbestcv.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon_pickbestcv.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/icon_pickbestcv.png',
+    apple: '/icon_pickbestcv.png',
+  },
 };
 
 export default function RootLayout({

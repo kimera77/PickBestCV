@@ -6,11 +6,11 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import type { CandidateMatch } from "@/lib/types";
 
 type AnalysisResultsProps = {
@@ -63,22 +63,12 @@ const ResultCard = ({ match }: { match: CandidateMatch }) => (
 );
 
 const LoadingSkeleton = () => (
-    <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-             <Card key={i}>
-                <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                        <Skeleton className="h-12 w-12 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-2 w-1/2" />
-                            <Skeleton className="h-2 w-full" />
-                        </div>
-                         <Skeleton className="h-6 w-20 rounded-md" />
-                    </div>
-                </CardContent>
-            </Card>
-        ))}
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="text-center space-y-2">
+            <p className="text-lg font-medium">Se están procesando los CV...</p>
+            <p className="text-sm text-muted-foreground">Esto puede tardar un momento dependiendo del número de CVs.</p>
+        </div>
     </div>
 );
 
@@ -95,7 +85,7 @@ export default function AnalysisResults({ result, isLoading }: AnalysisResultsPr
                     Resultados del análisis
                 </CardTitle>
                 <CardDescription>
-                    La IA está analizando los CVs. Esto puede tardar un momento.
+                    La IA está analizando los CVs.
                 </CardDescription>
             </CardHeader>
             <CardContent>
