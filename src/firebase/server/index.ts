@@ -26,11 +26,21 @@ export async function getAdminApp() {
   } else if (process.env.SERVICE_ACCOUNT_JSON) {
     // Fallback: support JSON string format
     try {
-      const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_JSON) as ServiceAccount;
+      let serviceAccountData = process.env.SERVICE_ACCOUNT_JSON;
+      
+      // If it's already an object (shouldn't happen), use it directly
+      // Otherwise, parse the JSON string
+      const serviceAccount = typeof serviceAccountData === 'string' 
+        ? JSON.parse(serviceAccountData) 
+        : serviceAccountData;
+      
       _app = initializeApp({
-        credential: cert(serviceAccount),
+        credential: cert(serviceAccount as ServiceAccount),
       });
+      
+      console.log('✅ Firebase Admin initialized with SERVICE_ACCOUNT_JSON');
     } catch (e) {
+      console.error('❌ Failed to parse SERVICE_ACCOUNT_JSON:', e);
       logError(e, { context: 'Failed to parse SERVICE_ACCOUNT_JSON' });
       throw new Error("Could not initialize Firebase Admin SDK with service account.");
     }
@@ -38,10 +48,13 @@ export async function getAdminApp() {
     // Firebase App Hosting auto-configures credentials
     // Use application default credentials (works in Firebase App Hosting)
     try {
+      console.log('🔄 Attempting to use default credentials...');
       _app = initializeApp({
         projectId: process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || 'studio-2697715951-c0e8e',
       });
+      console.log('✅ Firebase Admin initialized with default credentials');
     } catch (e) {
+      console.error('❌ Failed with default credentials:', e);
       logError(e, { context: 'Failed to initialize Firebase Admin SDK with default credentials' });
       throw new Error("Could not initialize Firebase Admin SDK. Missing credentials.");
     }
