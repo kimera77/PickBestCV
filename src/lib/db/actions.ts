@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import type { JobTemplate } from "../types";
 import { requireAuth } from "../auth/actions";
 import { AppError, ErrorCodes, logError } from "../errors";
+import { DEFAULT_TEMPLATES } from "./default-templates";
 
 const TemplateSchema = z.object({
   title: z.string().min(1, "El título es obligatorio."),
@@ -146,47 +147,6 @@ export async function deleteJobTemplate(templateId: string, userId: string) {
 }
 
 
-const defaultTemplates: JobTemplate[] = [
-    {
-      id: "default-template-1",
-      title: "Profesor/a de Secundaria",
-      description: `Buscamos un/a profesor/a de secundaria entusiasta y dedicado/a para unirse a nuestro equipo.
-
-Responsabilidades:
-- Impartir clases de [Asignatura] a estudiantes de secundaria.
-- Preparar y calificar exámenes, trabajos y proyectos.
-- Crear un ambiente de aprendizaje positivo e inclusivo.
-- Colaborar con otros profesores y personal del centro.
-
-Requisitos:
-- Grado en [Área de estudio] o similar.
-- Máster en Formación del Profesorado o CAP.
-- Excelentes habilidades de comunicación y organización.
-- Pasión por la enseñanza y el desarrollo de los jóvenes.`,
-      userId: "default",
-      createdAt: new Date('2024-01-01T10:00:00Z'),
-    },
-    {
-      id: "default-template-2",
-      title: "Ingeniero/a de Software",
-      description: `Buscamos un/a Ingeniero/a de Software con talento para diseñar, desarrollar y mantener software de alta calidad.
-
-Responsabilidades:
-- Escribir código limpio, mantenible y eficiente.
-- Colaborar con equipos multifuncionales para definir y enviar nuevas características.
-- Solucionar problemas y depurar aplicaciones.
-- Mejorar continuamente las prácticas de desarrollo.
-
-Requisitos:
-- Experiencia con JavaScript/TypeScript, React y Node.js.
-- Conocimiento de bases de datos SQL y NoSQL.
-- Familiaridad con metodologías ágiles.
-- Pasión por la tecnología y la resolución de problemas.`,
-      userId: "default",
-      createdAt: new Date('2024-01-01T09:00:00Z'),
-    },
-];
-
 export async function getJobTemplates(userId: string = 'guest'): Promise<JobTemplate[]> {
   try {
     console.log('📋 Getting templates for userId:', userId);
@@ -197,6 +157,65 @@ export async function getJobTemplates(userId: string = 'guest'): Promise<JobTemp
     // Fetch user's templates (including 'guest' user templates)
     const querySnapshot = await collectionRef
       .where('userId', '==', userId)
+      .orderBy("createdAt", "desc")
+      .get();
+    
+    console.log('📊 Found', querySnapshot.size, 'user templates in Firestore');
+    
+    const userTemplates: JobTemplate[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log('📄 Template doc:', doc.id, 'userId:', data.userId);
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+      userTemplates.push({ 
+        id: doc.id, 
+        title: data.title,
+        description: data.description,
+        userId: data.userId,
+        createdAt 
+      } as JobTemplate);
+    });
+
+    // Add default templates with unique IDs
+    const defaultTemplatesWithIds: JobTemplate[] = DEFAULT_TEMPLATES.map((template, index) => ({
+      ...template,
+      id: `default-template-${index + 1}`,
+      createdAt: new Date(Date.now() - (index + 1) * 86400000), // Older dates for defaults
+    }));
+
+    // Combine user templates with defaults
+    // Show user's templates first, then defaults
+    const result = [...userTemplates, ...defaultTemplatesWithIds];
+    console.log('✅ Returning', result.length, 'total templates');
+    
+    // Serialize dates to ISO strings for client
+    return JSON.parse(JSON.stringify(result, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }));
+
+  } catch (error) {
+    console.error('❌ Error getting templates:', error);
+    logError(error, { action: 'getJobTemplates', userId });
+    
+    // On error, return default templates as fallback
+    const defaultTemplatesWithIds: JobTemplate[] = DEFAULT_TEMPLATES.map((template, index) => ({
+      ...template,
+      id: `default-template-${index + 1}`,
+      createdAt: new Date(Date.now() - (index + 1) * 86400000),
+    }));
+    
+    return JSON.parse(JSON.stringify(defaultTemplatesWithIds, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    }));
+  }
+}
       .orderBy("createdAt", "desc")
       .get();
     

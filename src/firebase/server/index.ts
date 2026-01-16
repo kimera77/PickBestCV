@@ -35,8 +35,16 @@ export async function getAdminApp() {
       throw new Error("Could not initialize Firebase Admin SDK with service account.");
     }
   } else {
-    // Otherwise, use application default credentials in production
-    _app = initializeApp();
+    // Firebase App Hosting auto-configures credentials
+    // Use application default credentials (works in Firebase App Hosting)
+    try {
+      _app = initializeApp({
+        projectId: process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || 'studio-2697715951-c0e8e',
+      });
+    } catch (e) {
+      logError(e, { context: 'Failed to initialize Firebase Admin SDK with default credentials' });
+      throw new Error("Could not initialize Firebase Admin SDK. Missing credentials.");
+    }
   }
 
   return _app;
