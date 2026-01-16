@@ -23,15 +23,15 @@ export async function getAdminApp() {
     _app = initializeApp({
       credential: cert(serviceAccount),
     });
-  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  } else if (process.env.SERVICE_ACCOUNT_JSON) {
     // Fallback: support JSON string format
     try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+      const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_JSON) as ServiceAccount;
       _app = initializeApp({
         credential: cert(serviceAccount),
       });
     } catch (e) {
-      logError(e, { context: 'Failed to parse FIREBASE_SERVICE_ACCOUNT' });
+      logError(e, { context: 'Failed to parse SERVICE_ACCOUNT_JSON' });
       throw new Error("Could not initialize Firebase Admin SDK with service account.");
     }
   } else {
