@@ -10,12 +10,6 @@ type Language = {
 export const languages: Language[] = [
   { code: "en", name: "English" },
   { code: "es", name: "Español" },
-  { code: "pt", name: "Português" },
-  { code: "it", name: "Italiano" },
-  { code: "fr", name: "Français" },
-  { code: "de", name: "Deutsch" },
-  { code: "nl", name: "Nederlands" },
-  { code: "pl", name: "Polski" },
 ];
 
 type LanguageContextType = {
@@ -23,7 +17,7 @@ type LanguageContextType = {
   setLanguage: (language: Language) => void;
 };
 
-const defaultLanguage = languages[0]; // English
+const defaultLanguage = languages[1]; // Spanish
 
 export const LanguageContext = createContext<LanguageContextType>({
   language: defaultLanguage,
@@ -32,15 +26,36 @@ export const LanguageContext = createContext<LanguageContextType>({
 
 export function LanguageProvider({ children }: PropsWithChildren) {
   const [language, setLanguage] = useState<Language>(defaultLanguage);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load saved language from localStorage on mount
   useEffect(() => {
+    const savedLangCode = localStorage.getItem('language');
+    if (savedLangCode) {
+      const savedLanguage = languages.find(l => l.code === savedLangCode);
+      if (savedLanguage) {
+        setLanguage(savedLanguage);
+        setIsInitialized(true);
+        return;
+      }
+    }
+    
+    // If no saved language, try to detect from browser
     const browserLangCode = navigator.language.split('-')[0];
     const matchedLanguage = languages.find(l => l.code === browserLangCode);
     if (matchedLanguage) {
       setLanguage(matchedLanguage);
+      localStorage.setItem('language', matchedLanguage.code);
     }
+    setIsInitialized(true);
   }, []);
 
+  // Save language to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('language', language.code);
+    }
+  }, [language, isInitialized]);
 
   const value = useMemo(() => ({ language, setLanguage }), [language]);
 

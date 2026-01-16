@@ -2,9 +2,11 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { logError } from "@/lib/errors";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function ContactFooter() {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleCopyEmail = () => {
     const email = "quimserra7@gmail.com";
@@ -26,14 +28,14 @@ export default function ContactFooter() {
   return (
     <footer className="text-center p-4">
       <p className="text-xs text-muted-foreground opacity-75">
-        Si tienes cualquier duda y quieres contactar conmigo, escríbeme{" "}
+        {t('footer.haveSuggestions')}{" "}
         <button
           onClick={handleCopyEmail}
           className="underline font-semibold text-primary hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-ring rounded-sm"
         >
-          aquí
-        </button>
-        .
+          {t('footer.contactUs')}
+        </button>{" "}
+        {t('footer.at')} quimserra7@gmail.com.
       </p>
     </footer>
   );

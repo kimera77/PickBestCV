@@ -4,6 +4,7 @@ import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/use-translation';
 
 type CvUploadProps = {
   name: string;
@@ -12,6 +13,7 @@ type CvUploadProps = {
 };
 
 export default function CvUpload({ name, files, setFiles }: CvUploadProps) {
+  const { t } = useTranslation();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles([...files, ...acceptedFiles]);
@@ -59,14 +61,14 @@ export default function CvUpload({ name, files, setFiles }: CvUploadProps) {
         <input {...getInputProps()} />
         <UploadCloud className="w-12 h-12 text-muted-foreground" />
         <p className="mt-4 text-lg text-center text-muted-foreground">
-          {isDragActive ? 'Suelta los archivos aquí...' : 'Arrastra y suelta los CVs aquí, o haz clic para seleccionar los archivos'}
+          {isDragActive ? t('cvUpload.uploading') : t('cvUpload.dragDrop')}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">(Archivos PDF, JPG o PNG)</p>
+        <p className="text-sm text-muted-foreground mt-1">{t('cvUpload.maxSize')}</p>
       </div>
 
       {files.length > 0 && (
         <div className="mt-4">
-          <h4 className="font-medium">Archivos subidos:</h4>
+          <h4 className="font-medium">{files.length} {t('cvUpload.filesSelected')}</h4>
           <ul className="mt-2 space-y-2">
             {files.map((file, index) => (
               <li

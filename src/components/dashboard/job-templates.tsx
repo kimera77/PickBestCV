@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PlusCircle, CheckCircle2, MoreVertical, Edit, Trash2 } from "lucide-react";
 import JobTemplateForm from "./job-template-form";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +47,7 @@ export default function JobTemplates({
 }: JobTemplatesProps) {
   const user = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [editingTemplate, setEditingTemplate] = useState<JobTemplate | null>(null);
   const deleteTemplateMutation = useDeleteTemplate();
 
@@ -62,8 +64,8 @@ export default function JobTemplates({
     try {
       await deleteTemplateMutation.mutateAsync({ templateId, userId: user.uid });
       toast({
-        title: "Plantilla eliminada",
-        description: "La plantilla de trabajo ha sido eliminada con éxito.",
+        title: t('templates.templateDeleted'),
+        description: t('templates.templateDeletedDesc'),
       });
       if (selectedTemplate?.id === templateId) {
         setSelectedTemplate(null);
@@ -71,7 +73,7 @@ export default function JobTemplates({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error al eliminar",
+        title: t('templates.deleteError'),
         description: error instanceof Error ? error.message : "No se pudo eliminar la plantilla.",
       });
     }
@@ -82,15 +84,15 @@ export default function JobTemplates({
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="grid gap-2">
-          <CardTitle>Plantillas de trabajo</CardTitle>
+          <CardTitle>{t('templates.title')}</CardTitle>
           <CardDescription>
-            Selecciona o crea una plantilla para el análisis.
+            {t('templates.selectTemplateDesc')}
           </CardDescription>
         </div>
          <JobTemplateForm onTemplateSaved={onTemplateUpdate}>
             <Button size="sm" className="gap-1 font-semibold">
               <PlusCircle className="h-4 w-4" />
-              Nueva plantilla
+              {t('templates.newTemplate')}
             </Button>
           </JobTemplateForm>
       </CardHeader>
@@ -100,12 +102,12 @@ export default function JobTemplates({
                 <div className="text-center text-muted-foreground py-8">
                     <div className="flex items-center justify-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                        <span>Cargando plantillas...</span>
+                        <span>{t('common.loading')}</span>
                     </div>
                 </div>
             ) : templates.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
-                    Aún no se han creado plantillas.
+                    {t('templates.noTemplatesDesc')}
                 </div>
             ) : (
                 templates.map((template) => (
@@ -145,28 +147,28 @@ export default function JobTemplates({
                                         >
                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                                 <Edit className="mr-2 h-4 w-4"/>
-                                                <span>Editar</span>
+                                                <span>{t('templates.edit')}</span>
                                             </DropdownMenuItem>
                                         </JobTemplateForm>
                                         <DropdownMenuSeparator />
                                          <AlertDialogTrigger asChild>
                                            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(e) => e.preventDefault()}>
                                               <Trash2 className="mr-2 h-4 w-4"/>
-                                              <span>Eliminar</span>
+                                              <span>{t('templates.delete')}</span>
                                           </DropdownMenuItem>
                                         </AlertDialogTrigger>
                                       </DropdownMenuContent>
                                   </DropdownMenu>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                      <AlertDialogTitle>{t('templates.confirmDelete')}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. Esto eliminará permanentemente la plantilla de trabajo.
+                                        {t('templates.confirmDeleteDesc')}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDelete(template.id)} className="bg-destructive hover:bg-destructive/90">Eliminar</AlertDialogAction>
+                                      <AlertDialogCancel>{t('templateForm.cancel')}</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(template.id)} className="bg-destructive hover:bg-destructive/90">{t('templates.delete')}</AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>

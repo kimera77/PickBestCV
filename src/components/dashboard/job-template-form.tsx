@@ -23,6 +23,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { useAuth } from "@/lib/auth/auth-provider";
 import { useCreateTemplate, useUpdateTemplate } from "@/hooks/use-templates";
 import { logError } from "@/lib/errors";
+import { useTranslation } from "@/hooks/use-translation";
 
 // Configure the worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -38,6 +39,7 @@ type JobTemplateFormProps = {
 
 export default function JobTemplateForm({ children, templateToEdit, onTemplateSaved, open: controlledOpen, onOpenChange: setControlledOpen }: JobTemplateFormProps) {
   const user = useAuth();
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = setControlledOpen ?? setInternalOpen;
@@ -92,14 +94,14 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
       }
       onTemplateSaved();
       toast({
-        title: `Plantilla ${isEditing ? 'actualizada' : 'creada'}`,
-        description: `La plantilla de trabajo se ha ${isEditing ? 'actualizado' : 'creado'} con éxito.`,
+        title: isEditing ? t('templateForm.templateUpdated') : t('templateForm.templateCreated'),
+        description: isEditing ? t('templateForm.templateUpdatedDesc') : t('templateForm.templateCreatedDesc'),
       });
       setOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error al guardar",
+        title: t('templateForm.error'),
         description: error instanceof Error ? error.message : `No se pudo ${isEditing ? 'actualizar' : 'crear'} la plantilla.`,
       });
     }
@@ -164,8 +166,8 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
     if (file.type !== 'application/pdf') {
         toast({
             variant: "destructive",
-            title: "Archivo no válido",
-            description: "Por favor, selecciona un archivo PDF.",
+            title: t('templateForm.invalidPdf'),
+            description: t('templateForm.invalidPdf'),
         });
         return;
     }
@@ -182,15 +184,15 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
        
         setDescription(extractedText);
         toast({
-            title: "Texto extraído",
-            description: "La descripción del trabajo se ha rellenado con el contenido del PDF.",
+            title: t('templateForm.extractionSuccess'),
+            description: t('templateForm.extractionSuccessDesc'),
         });
     } catch (error) {
         logError(error, { action: 'handlePdfUpload', extractionMethod });
         toast({
             variant: "destructive",
-            title: "Error de extracción",
-            description: `No se pudo extraer el texto del PDF. ${error instanceof Error ? error.message : ''}`,
+            title: t('templateForm.extractionError'),
+            description: `${extractionMethod === 'ai' ? t('templateForm.aiExtractionError') : t('templateForm.localExtractionError')}. ${error instanceof Error ? error.message : ''}`,
         });
     } finally {
         setIsExtracting(false);
@@ -216,30 +218,30 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PlusCircle className="h-6 w-6 text-primary"/>
-            {isEditing ? 'Editar' : 'Crear'} plantilla de trabajo
+            {isEditing ? t('templateForm.editTemplate') : t('templateForm.newTemplate')}
           </DialogTitle>
           <DialogDescription>
-              {isEditing ? 'Modifica los detalles de la plantilla de trabajo.' : 'Rellena los detalles para el nuevo puesto de trabajo.'}
+              {isEditing ? t('templateForm.editDesc') : t('templateForm.createDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">
-              Título
+              {t('templateForm.jobTitle')}
             </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="col-span-3"
-              placeholder="Ej: Desarrollador WEB Frontend"
+              placeholder={t('templateForm.jobTitlePlaceholder')}
               disabled={isLoading}
             />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
             <div className="text-right space-y-2 pt-2">
                 <Label htmlFor="description">
-                Descripción
+                {t('templateForm.jobDescription')}
                 </Label>
                  <input
                     type="file"
@@ -262,7 +264,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                         ) : (
                             <Upload className="mr-2 h-4 w-4" />
                         )}
-                        PDF
+                        {t('templateForm.extractLocally')}
                     </Button>
                     <Button 
                         variant="outline"
@@ -279,7 +281,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
                             <WandSparkles className="mr-2 h-4 w-4" />
                         </>
                         )}
-                        PDF
+                        {t('templateForm.extractWithAI')}
                     </Button>
                 </div>
             </div>
@@ -288,14 +290,14 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-3 min-h-[350px]"
-              placeholder="Describe el puesto, las responsabilidades y los requisitos, o importa un PDF."
+              placeholder={t('templateForm.jobDescriptionPlaceholder')}
               disabled={isLoading}
             />
           </div>
         </div>
         <DialogFooter>
             <DialogClose asChild>
-                <Button variant="outline" disabled={isLoading}>Cancelar</Button>
+                <Button variant="outline" disabled={isLoading}>{t('templateForm.cancel')}</Button>
             </DialogClose>
           <Button onClick={handleSave} disabled={!title || !description || isLoading}>
             {isSaving ? (
@@ -305,7 +307,7 @@ export default function JobTemplateForm({ children, templateToEdit, onTemplateSa
             ) : (
                 <PlusCircle className="mr-2 h-4 w-4" />
             )}
-            {isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear plantilla'}
+            {isSaving ? t('templateForm.saving') : t('templateForm.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

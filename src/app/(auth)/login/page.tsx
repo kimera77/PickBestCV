@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
+import LanguageSwitcher from "@/components/dashboard/language-switcher";
 import {
   Card,
   CardContent,
@@ -28,41 +30,42 @@ import { useState } from "react";
 import { clientHandleSignIn, clientHandleAnonymousSignIn } from "@/lib/auth/auth-provider";
 import { Logo } from "@/components/logo";
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
-  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
-});
-
-function getFirebaseErrorMessage(errorCode: string): string {
+function getFirebaseErrorMessage(errorCode: string, t: (key: any) => string): string {
     switch (errorCode) {
         case 'auth/email-already-in-use':
-            return 'Este correo electrónico ya está en uso por otra cuenta.';
+            return t('error.emailInUse');
         case 'auth/invalid-email':
-            return 'El formato del correo electrónico no es válido.';
+            return t('error.invalidEmail');
         case 'auth/operation-not-allowed':
-            return 'El inicio de sesión con correo y contraseña no está habilitado.';
+            return t('error.operationNotAllowed');
         case 'auth/weak-password':
-            return 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
+            return t('error.weakPassword');
         case 'auth/user-disabled':
-            return 'Este usuario ha sido deshabilitado.';
+            return t('error.userDisabled');
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-            return 'Correo electrónico o contraseña incorrectos.';
+            return t('error.wrongCredentials');
         case 'auth/invalid-api-key':
-            return 'Error de configuración de Firebase. Verifica las variables de entorno.';
+            return t('error.invalidApiKey');
         case 'unknown':
-            return 'Error de conexión. Verifica tu configuración de Firebase.';
+            return t('error.connectionError');
         default:
-            return `Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo. Código: ${errorCode}`;
+            return `${t('error.unexpected')} (${errorCode})`;
     }
 }
 
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [isAnonymousLoading, setAnonymousLoading] = useState(false);
+
+  const formSchema = z.object({
+    email: z.string().email({ message: t('login.invalidEmail') }),
+    password: z.string().min(6, { message: t('login.passwordTooShort') }),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -78,7 +81,7 @@ export default function LoginPage() {
       await clientHandleSignIn(values.email, values.password);
       router.push("/dashboard");
     } catch (e: any) {
-      setError(getFirebaseErrorMessage(e.code));
+      setError(getFirebaseErrorMessage(e.code, t));
     }
   };
 
@@ -94,7 +97,7 @@ export default function LoginPage() {
     } catch (e: any) {
       console.error('❌ Error en login anónimo:', e);
       const errorCode = e?.code || 'unknown';
-      setError(getFirebaseErrorMessage(errorCode));
+      setError(getFirebaseErrorMessage(errorCode, t));
       setAnonymousLoading(false);
     }
   };
@@ -102,11 +105,14 @@ export default function LoginPage() {
   return (
     <Card className="mx-auto max-w-sm shadow-xl w-full">
       <CardHeader>
+        <div className="flex justify-end mb-2">
+          <LanguageSwitcher />
+        </div>
         <Link href="/" className="flex flex-col items-center justify-center text-center gap-2 mb-4">
           <Logo className="h-12 w-12" />
-          <CardTitle className="text-3xl font-bold tracking-tighter">PickbestCV</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tighter">{t('login.title')}</CardTitle>
           <CardDescription className="text-balance">
-            Introduce tu correo electrónico para acceder a tu cuenta
+            {t('login.description')}
           </CardDescription>
         </Link>
       </CardHeader>
@@ -117,7 +123,7 @@ export default function LoginPage() {
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
+                  <AlertTitle>{t('common.error')}</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -126,9 +132,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Correo electrónico</FormLabel>
+                    <FormLabel>{t('login.email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="m@example.com" {...field} />
+                      <Input placeholder={t('login.emailPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,12 +146,12 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center">
-                      <FormLabel>Contraseña</FormLabel>
+                      <FormLabel>{t('login.password')}</FormLabel>
                       <Link
                         href="#"
                         className="ml-auto inline-block text-sm text-primary hover:underline"
                       >
-                        ¿Has olvidado tu contraseña?
+                        {t('login.forgotPassword')}
                       </Link>
                     </div>
                     <FormControl>
@@ -157,7 +163,7 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full font-semibold" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Iniciar sesión
+                {t('login.signIn')}
               </Button>
             </form>
           </Form>
@@ -167,19 +173,19 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                O continuar con
+                {t('login.orContinueWith')}
               </span>
             </div>
           </div>
           <Button variant="outline" className="w-full font-semibold" onClick={onAnonymousSubmit} disabled={isAnonymousLoading}>
             {isAnonymousLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Entrar sin usuario
+            {t('login.signInAnonymous')}
           </Button>
         </div>
         <div className="mt-4 text-center text-sm">
-          ¿No tienes una cuenta?{" "}
+          {t('login.noAccount')}{" "}
           <Link href="/signup" className="font-semibold text-primary hover:underline">
-            Regístrate
+            {t('login.signUp')}
           </Link>
         </div>
       </CardContent>

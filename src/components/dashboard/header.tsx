@@ -6,6 +6,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ import { useRouter } from "next/navigation";
 
 export default function Header() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await clientHandleSignOut();
@@ -44,12 +46,12 @@ export default function Header() {
             <SheetTrigger asChild>
             <Button size="icon" variant="outline" className="sm:hidden">
                 <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
+                <span className="sr-only">{t('header.toggleMenu')}</span>
             </Button>
             </SheetTrigger>
             <SheetContent side="left" className="sm:max-w-xs">
             <SheetHeader className="sr-only">
-              <SheetTitle>Menú principal</SheetTitle>
+              <SheetTitle>{t('header.mainMenu')}</SheetTitle>
               <SheetDescription>Navegación principal del sitio</SheetDescription>
             </SheetHeader>
             <nav className="grid gap-6 text-lg font-medium">
@@ -64,13 +66,13 @@ export default function Header() {
                 href="#"
                 className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                 >
-                Dashboard
+                {t('header.dashboard')}
                 </Link>
                 <Link
                 href="#"
                 className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                 >
-                Ajustes
+                {t('header.settings')}
                 </Link>
             </nav>
             </SheetContent>
@@ -87,13 +89,13 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('header.myAccount')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Perfil</DropdownMenuItem>
-            <DropdownMenuItem>Ajustes</DropdownMenuItem>
+            <DropdownMenuItem>{t('header.profile')}</DropdownMenuItem>
+            <DropdownMenuItem>{t('header.settings')}</DropdownMenuItem>
             <DropdownMenuSeparator />
              <DropdownMenuItem onClick={handleSignOut}>
-                Cerrar sesión
+                {t('header.signOut')}
               </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
