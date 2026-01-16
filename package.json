@@ -8,10 +8,16 @@
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
+    "build:export": "next build && next export",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:emulators:init": "tsx scripts/init-firestore-emulator.ts",
+    "firebase:deploy": "npm run build:export && firebase deploy",
+    "firebase:deploy:hosting": "npm run build:export && firebase deploy --only hosting",
+    "firebase:deploy:firestore": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",

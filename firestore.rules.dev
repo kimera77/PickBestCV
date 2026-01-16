@@ -1,22 +1,12 @@
 
 /**
- * @file Firebase Security Rules for CV Match Pro.
- *
- * Core Philosophy:
- * This ruleset enforces a user-ownership model where users can only access their own data.
- *
- * Data Structure:
- * - jobPositionTemplates: Templates at root level with userId field
- * - users/{userId}: User-specific data nested under user ID
- *
- * Key Security Decisions:
- * - User listing is implicitly disallowed
- * - All write operations are restricted to the owner of the data
- * - Templates can be created by any authenticated user
- * - Templates can only be modified/deleted by their owner
- *
- * Denormalization for Authorization:
- * The `userId` is present on all documents for fast authorization checks.
+ * @file Firebase Security Rules for CV Match Pro - DEVELOPMENT VERSION
+ * 
+ * ⚠️ Solo para desarrollo local con emulador
+ * 
+ * Estas reglas son casi idénticas a producción, pero ligeramente más permisivas
+ * para facilitar desarrollo y testing. La principal diferencia es que permiten
+ * operaciones sin userId en algunos casos para testing.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -41,38 +31,27 @@ service cloud.firestore {
     // User documents
     match /users/{userId} {
       allow read, write: if isSignedIn() && isOwner(userId);
-      allow list: if false; // Explicitly disallow listing all users
+      allow list: if false;
       
-      // User's CVs
       match /cvs/{cvId} {
         allow read, write: if isSignedIn() && isOwner(userId);
       }
 
-      // User's analysis results
       match /analysisResults/{analysisResultId} {
         allow read, write: if isSignedIn() && isOwner(userId);
       }
     }
 
-    // Job Position Templates (root level collection)
+    // Job Position Templates - Same as production
     match /jobPositionTemplates/{templateId} {
-      // Anyone authenticated can read templates
       allow read: if isSignedIn();
-      
-      // Only authenticated users can create templates, and they must set their own userId
       allow create: if isSignedIn() && willBeDocOwner();
-      
-      // Only the owner can update their templates
       allow update: if isSignedIn() && isDocOwner() && willBeDocOwner();
-      
-      // Only the owner can delete their templates (except defaults)
       allow delete: if isSignedIn() && isDocOwner() && resource.data.userId != 'default';
-      
-      // Allow listing templates (needed for queries)
       allow list: if isSignedIn();
     }
 
-    // CV Analyses (if used at root level)
+    // CV Analyses
     match /cvAnalyses/{analysisId} {
       allow read: if isSignedIn() && isDocOwner();
       allow create: if isSignedIn() && willBeDocOwner();
